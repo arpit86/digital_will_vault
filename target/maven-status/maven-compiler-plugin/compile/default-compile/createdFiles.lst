@@ -1,0 +1,10 @@
+com\csus\vault\web\model\DigitalWill.class
+com\csus\vault\web\service\UploadService.class
+com\csus\vault\web\controllers\UploadController.class
+com\csus\vault\web\dao\UserDaoImpl.class
+com\csus\vault\web\model\UserKey.class
+com\csus\vault\web\dao\UserDao.class
+com\csus\vault\web\service\EmailService.class
+com\csus\vault\web\controllers\RegistrationController.class
+com\csus\vault\web\controllers\HomeController.class
+com\csus\vault\web\service\UserService.class
