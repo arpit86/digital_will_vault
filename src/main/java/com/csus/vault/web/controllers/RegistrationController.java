@@ -20,7 +20,7 @@ public class RegistrationController {
 	public UserService userService;
 	
 	@RequestMapping(value = "/register", method = RequestMethod.GET)
-	public ModelAndView showRegistration(Model model, HttpServletResponse response) {
+	public ModelAndView showRegistration(Model model) {
 		ModelAndView mv = new ModelAndView("register");
 		mv.addObject("user", new UserKey());
 		return mv;
@@ -32,6 +32,7 @@ public class RegistrationController {
 		
 		System.out.println("Register User: "+ user.getFirstName());
 		userService = new UserService();
+		request.getSession().setAttribute("user",user);
 		userService.register(user);
 		return new ModelAndView("main", "email", user.getEmail());
 	}
