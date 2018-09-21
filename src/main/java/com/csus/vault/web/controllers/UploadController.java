@@ -1,6 +1,8 @@
 package com.csus.vault.web.controllers;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
@@ -19,7 +21,6 @@ import com.csus.vault.web.service.EncryptDecryptService;;
 public class UploadController {
 	
 	public EncryptDecryptService uploadService;
-	
 	@RequestMapping(value = "/upload", method = RequestMethod.GET)
 	public ModelAndView viewUploadFile(Model model, HttpServletResponse response) {
 		return new ModelAndView("uploadFile");
@@ -33,7 +34,8 @@ public class UploadController {
 			uploadService = new EncryptDecryptService();
 			//uploadService.upload(file, privateKey);
 			UserKey user = (UserKey) session.getAttribute("user");
-			uploadService.upload(file, user);
+			ArrayList blockchain = (ArrayList) session.getServletContext().getAttribute("blockchain");
+			uploadService.upload(file, user, blockchain);
 			System.out.println("File uploaded: " + file.getOriginalFilename());
 			return new ModelAndView("uploadFile");
 		} else {

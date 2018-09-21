@@ -1,9 +1,11 @@
 package com.csus.vault.web.controllers;
 
+import java.util.ArrayList;
+
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -34,6 +36,8 @@ public class RegistrationController {
 		userService = new UserService();
 		request.getSession().setAttribute("user",user);
 		userService.register(user);
-		return new ModelAndView("main", "email", user.getEmail());
+		ServletContext context = request.getSession().getServletContext();
+		context.setAttribute("blockchain", new ArrayList<>());
+		return new ModelAndView("uploadFile", "email", user.getEmail());
 	}
 }

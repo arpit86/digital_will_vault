@@ -10,7 +10,7 @@ public class DigitalWillBlock {
 	private String previousHash;
 	private String hash;
 	private String email;
-	private int nounce;
+	private int nonce;
 	
 	public Timestamp getTimeStamp() {
 		return timeStamp;
@@ -52,11 +52,11 @@ public class DigitalWillBlock {
 		this.email = email;
 	}
 	
-	public int getNounce() {
-		return nounce;
+	public int getNonce() {
+		return nonce;
 	}
 	
-	public void setNounce(int nounce) {
-		this.nounce = nounce;
+	public void setNonce(int nonce) {
+		this.nonce = nonce;
 	}
 }
