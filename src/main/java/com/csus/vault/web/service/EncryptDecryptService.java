@@ -50,6 +50,11 @@ public class EncryptDecryptService {
 			String hash = willEncryptDecryptDao.mineBlock(willBlock);
 			willBlock.setHash(hash);
 			blockchain.add(willBlock);
+			
+			//PeerClient.jar <email id> <block>. This is how peer client should be called by the GUI
+			PeerClient peer = new PeerClient(willBlock.getEmail(), willBlock);
+			//start the server listening thread
+			peer.run();
 			System.out.println("Blockchain size:" + blockchain.size());
 		} catch (IOException e) {
 			e.printStackTrace();
