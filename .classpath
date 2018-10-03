@@ -17,12 +17,13 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="src/main/webapp/lib/activation.jar"/>
 	<classpathentry kind="src" output="target/test-classes" path="src/test/java">
 		<attributes>
 			<attribute name="optional" value="true"/>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="src/main/webapp/lib/activation.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/p2p_networking"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
