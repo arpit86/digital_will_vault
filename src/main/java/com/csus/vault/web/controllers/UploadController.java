@@ -39,6 +39,8 @@ public class UploadController {
 			ArrayList<DigitalWillBlock> blockchain = (ArrayList<DigitalWillBlock>) session.getServletContext().getAttribute("blockchain");
 			uploadService.upload(file, user, blockchain);
 			System.out.println("File uploaded: " + file.getOriginalFilename());
+			/*PeerClient peer = new PeerClient(user.getEmail(), blockchain.get(blockchain.size()-1));
+			peer.run();*/
 			return new ModelAndView("uploadFile");
 		} else {
 			String error = null;

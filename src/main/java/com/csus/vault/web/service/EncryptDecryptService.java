@@ -23,8 +23,6 @@ public class EncryptDecryptService {
 		try {
 			byte[] bytes = file.getBytes();
 			
-			
-	
 			// Encrypting the file data with user's Private key
 			byte[] signedData = willEncryptDecryptDao.encryptUploadedFileWithPrivKey(bytes, privateKey);
 			byte[] decryptData = willEncryptDecryptDao.decryptBlockDataWithPubKey(signedData, "email");
@@ -52,13 +50,12 @@ public class EncryptDecryptService {
 			blockchain.add(willBlock);
 			
 			//PeerClient.jar <email id> <block>. This is how peer client should be called by the GUI
-			PeerClient peer = new PeerClient(willBlock.getEmail(), willBlock);
+			PeerConnectionService peer = new PeerConnectionService(willBlock.getEmail(), willBlock);
 			//start the server listening thread
-			peer.run();
+			peer.start();
 			System.out.println("Blockchain size:" + blockchain.size());
 		} catch (IOException e) {
 			e.printStackTrace();
-		}		
+		}
 	}
-
 }
