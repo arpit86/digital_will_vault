@@ -28,6 +28,7 @@ public class PeerConnectionService extends Thread{
 	public PeerConnectionService(String email, DigitalWillBlock block){
     	this.email = email;
     	this.block = block;
+    	this.peerList = new ArrayList<PeerInfo>();
     	
     	// Establish a connection with boot node server on port 2999
         try {
@@ -37,39 +38,40 @@ public class PeerConnectionService extends Thread{
             this.port= socket.getLocalPort();
             outWriter = new PrintWriter(socket.getOutputStream(), true);
             outWriter.println(email);
+			System.out.println("Sent email to server");
             outWriter.println(port);
+            System.out.println("Sent port to server");
+            outWriter.println("End");
+            System.out.println("Sent End to server");
             
             inReader = new BufferedReader(new InputStreamReader(socket.getInputStream())); 
             
             String peerEmail = ""; 
             String peerPort = "";
-
+            String data = "init";
+            	data = inReader.readLine();
+            	System.out.println("received peer's email from server");
             // Get the list of peers from boot node server and connect to each of the peers
-            while (!email.isEmpty()){
+            while (!data.equals("End")){
                 try{
-                	if (inReader.ready()) {
-                		peerEmail = inReader.readLine(); 
+                	//if (inReader.ready()) {
+                		peerEmail = data; 
                 		System.out.println(peerEmail); 
-                		peerPort = inReader.readLine(); 
+                		peerPort = inReader.readLine();
+                		System.out.println("received peer's port from server");
                 		System.out.println(peerPort);
-                	
-                
-                		if(!peerPort.equals(port)) {
-                			Socket peerSocket = new Socket("127.0.0.1", Integer.parseInt(peerPort)); 
-                			outWriter = new PrintWriter(peerSocket.getOutputStream(), true);
-                			outWriter.println(email);
-                			System.out.println("Connected to peer "+ peerEmail); 
-	              
-                			//Create an object to store the peer's information
-                			peerInfo = new PeerInfo();
-                			//get peer's email id
-                			peerInfo.setEmail(peerEmail);
-                			//get the peer's port number
-                			peerInfo.setPort(Integer.parseInt(peerPort));
-                			peerInfo.setSocket(peerSocket);
-                			peerList.add(peerInfo);
-                		}
-                	}
+               	              
+               			//Create an object to store the peer's information
+               			peerInfo = new PeerInfo();
+               			//get peer's email id
+               			peerInfo.setEmail(peerEmail);
+               			//get the peer's port number
+               			peerInfo.setPort(Integer.parseInt(peerPort));
+               			//peerInfo.setSocket(peerSocket);
+               			peerList.add(peerInfo);
+               			data = inReader.readLine();
+               			System.out.println("received next peer's email or end from server");
+                   	//}
                 } catch(IOException io) { 
                     io.printStackTrace(); 
                 }
@@ -98,13 +100,21 @@ public class PeerConnectionService extends Thread{
 	@SuppressWarnings("resource")
 	public void run(){
 		try {
+			
+			for(PeerInfo p: peerList) {
+				Socket peerSocket = new Socket("127.0.0.1", p.getPort()); 
+        		outWriter = new PrintWriter(peerSocket.getOutputStream(), true);
+        		outWriter.println(email);
+        		p.setSocket(peerSocket);
+        		System.out.println("Connected to peer "+ p.getEmail());
+			}
+			
 			//Start server socket for listening at same port used for connection to boot node
 			ServerSocket serverSocket = new ServerSocket(port);
-			System.out.println("Peer Server listening for connections on port: "+port);
 				
 			//keep listening for incoming connections
 			while(true) {
-			
+				System.out.println(email+" Server listening for connections on port: "+port);
 				//accept is a blocking call meaning that code won't execute further until a peer connects to server
 				Socket socket = serverSocket.accept();
 									
@@ -115,12 +125,9 @@ public class PeerConnectionService extends Thread{
 		        inReader = new BufferedReader(new InputStreamReader(socket.getInputStream())); 
 		        String data = "";
 		  		
-		        // reads message from client until "End" is sent 
-		        while (!data.isEmpty()) { 
 		        	try { 
 		        		data = inReader.readLine(); 
-		                System.out.println(data);
-		                if(!data.isEmpty()) {
+		        		System.out.println(email+" received connection request from user "+data);
 		                	//create a peer object to store this peer's data
 		    				PeerInfo peer = new PeerInfo();
 		                	peer.setEmail(data);
@@ -129,12 +136,10 @@ public class PeerConnectionService extends Thread{
 		    				peer.setSocket(socket);
 		    				//Adding the peer to the Arraylist
 		    				peerList.add(peer);
-		    				System.out.println("The peer trying to connect is: "+ peer.getEmail() +" on the port: "+ socket.getPort());
-		                }
+		    				System.out.println("Connected to "+ peer.getEmail() +" on port "+ socket.getPort());
 		            } catch(IOException io){ 
 		                io.printStackTrace(); 
 		            } 
-		        }//end of while loop
 		            
 		        //create a peer object to store this peer's data
 				/*PeerInfo peer = new PeerInfo();
@@ -147,7 +152,6 @@ public class PeerConnectionService extends Thread{
 				//Adding the peer to the Arraylist
 				peerList.add(peer);*/
 				//System.out.println("The peer trying to connect is: "+ peer.getEmail() +" on the port: "+ socket.getPort());
-				socket.close();
 			} // end of while loop
 		} catch (IOException io) {
 			io.printStackTrace();
