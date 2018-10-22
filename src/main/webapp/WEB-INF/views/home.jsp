@@ -10,10 +10,16 @@
 	</head>
 
 	<body>
-		<p> Please register yourself so that you can upload, view and verify your digital will.</p>
+		<p align="center">Please register to use the application using the link below:</p>
 		<table align="center">
-		<tr>
-			<td><a href="register">Register</a></td>
-		</tr>
-	</table>
+			<tr>
+				<td><a href="register">Register</a></td>
+			</tr>
+		</table>
+		<p align="center">If registered already, please log in:</p>
+		<table align="center">
+			<tr>
+				<td><a href="login">Login</a></td>
+			</tr>
+		</table>
 </body>

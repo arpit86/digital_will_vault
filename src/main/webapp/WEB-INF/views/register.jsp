@@ -8,38 +8,53 @@
 	</head>
     
     <body>
-	    <form:form id="regForm" modelAttribute="user" action="registerProcess" method="post">
+	    <form:form id="registerForm" modelAttribute="user" action="registerProcess" method="post">
 	        <table>
 	            <tr>
 	                <td>
-	                    <form:label path="firstName">First Name:</form:label>
+	                    <form:label path="user_firstName">First Name:
+	                    	<span style="color:red;">*</span>
+	                    </form:label>
                     </td>
                     <td>
-                        <form:input path="firstName" name="firstName" id="firstName" />
+                        <form:input path="user_firstName" name="user_firstName" id="user_firstName" />
                     </td>
 				</tr>
 				<tr>
 	                <td>
-	                    <form:label path="lastName">Last Name:</form:label>
+	                    <form:label path="user_lastName">Last Name:</form:label>
                     </td>
                     <td>
-                        <form:input path="lastName" name="lastName" id="lastName" />
+                        <form:input path="user_lastName" name="user_lastName" id="user_lastName" />
                     </td>
 				</tr>
 				<tr>
 	                <td>
-	                    <form:label path="email">Email:</form:label>
+	                    <form:label path="userEmail">Email:
+	                    	<span style="color:red;">*</span>
+	                    </form:label>
                     </td>
 	            	<td>
-                        <form:input path="email" name="email" id="email" />
+                        <form:input path="userEmail" name="userEmail" id="userEmail" />
                     </td>
 				</tr>
+				<tr>
+	                <td>
+	                    <form:label path="userPhone">Phone:</form:label>
+                    </td>
+	            	<td>
+                        <form:input path="userPhone" name="userPhone" id="userPhone" />
+                    </td>
+				</tr>
+				
                 <tr>
 	                <td>
-	                    <form:label path="password">Password:</form:label>
+	                    <form:label path="userPassword">Password:
+	                    	<span style="color:red;">*</span>
+	                    </form:label>
                     </td>
                     <td>
-	                    <form:password path="password" name="password" id="password" />
+	                    <form:password path="userPassword" name="userPassword" id="userPassword" />
                     </td>
 				</tr>
                 <tr>

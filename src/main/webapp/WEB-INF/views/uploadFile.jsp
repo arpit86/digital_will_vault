@@ -11,16 +11,16 @@
         
         <br/>
         <p> Please upload your digital will using the Browse button.
-        	<br/>An email was sent to the ${email} which contains your public token and your private token.
+        	<br/>An email was sent to the ${name} which contains your public token and your private token.
         	<br/>Please feel free to share your public token with anyone who wants to digitally verify your will.
         	<br/>Keep the private token safe so that no can use it to create a duplicate will.
         </p>
         <form action = "uploadFile" method = "post" enctype = "multipart/form-data">
         	<table border="0">
-                <tr>
+                <!-- <tr>
                     <td>Please provide the private key token:</td>
                     <td><input type = "text" name = "privKey" size = "50"/></td>
-                </tr>
+                </tr> -->
                 <tr>
                 	<td>Please select the file:</td>
                 	<td><input type = "file" name = "file" accept=".pdf, .txt, .doc"/></td>

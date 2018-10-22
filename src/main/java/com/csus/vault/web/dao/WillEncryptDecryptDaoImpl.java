@@ -108,7 +108,7 @@ public class WillEncryptDecryptDaoImpl implements WillEncryptDecryptDao {
 	}
 	
 
-	private String applySha256ToBlockData(String string) {
+	public String applySha256ToBlockData(String string) {
 		
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");	        

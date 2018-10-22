@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.csus.vault.web.dao.WillEncryptDecryptDao;
 import com.csus.vault.web.dao.WillEncryptDecryptDaoImpl;
 import com.csus.vault.web.model.DigitalWillBlock;
-import com.csus.vault.web.model.UserKey;
+import com.csus.vault.web.model.VaultUser;
 
 public class EncryptDecryptService {
 	
@@ -33,12 +33,12 @@ public class EncryptDecryptService {
 		
 	}
 
-	public void upload(MultipartFile file, UserKey user, ArrayList<DigitalWillBlock> blockchain) {
+	public void upload(MultipartFile file, VaultUser user, ArrayList<DigitalWillBlock> blockchain) {
 		try {
 			byte[] bytes = file.getBytes();
 			DigitalWillBlock willBlock = new DigitalWillBlock();
 			willBlock.setData(bytes);
-			willBlock.setEmail(user.getEmail());
+			willBlock.setEmail(user.getUserEmail());
 			willBlock.setTimeStamp(new Timestamp(new Date().getTime()));
 			if(blockchain.size() <= 0) {
 				willBlock.setPreviousHash("0");
