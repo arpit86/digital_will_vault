@@ -9,13 +9,16 @@ import java.security.spec.InvalidKeySpecException;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
-import com.csus.vault.web.dao.UserDaoImpl;
+import com.csus.vault.web.dao.UserDaoOperation;
 import com.csus.vault.web.model.VaultUser;
 
 public class UserService {
+	
+	private UserDaoOperation userDao = new UserDaoOperation();
+	private final int ITERATIONS = 1000;
+	private final int KEY_LENGTH = 128;
 
 	public void register(VaultUser user) {
-		UserDaoImpl userDao = new UserDaoImpl();
 		try {
 			generateKeyPair(user);
 			generatePasswordHashAndSalt(user);
@@ -26,15 +29,16 @@ public class UserService {
 	}
 	
 	public boolean verify(VaultUser user) {
-		UserDaoImpl userDao = new UserDaoImpl();
 		return userDao.verify(user);
 	}
 	
-	public VaultUser verifyUser(String userEmail) {
-		UserDaoImpl userDao = new UserDaoImpl();
-		return userDao.verifyUser(userEmail);
+	public VaultUser getUserDetailByEmail(String userEmail) {
+		return userDao.getUserDetailByEmail(userEmail);
 	}
 	
+	/*
+	 *  This function generate private-public key pair using RSA algorithm.
+	 */
 	private void generateKeyPair(VaultUser user) throws NoSuchAlgorithmException {
 		
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
@@ -44,16 +48,16 @@ public class UserService {
         //Send an email to user with private key to the user email
         new EmailService().sendEmailContainingThePrivateKey(keyGen.genKeyPair().getPrivate().getEncoded(), user.getUserEmail());
         
-        System.out.println("Public key is saved in database and the Private key is memailed to user.");
+        System.out.println("Public key is saved in database and the Private key is emailed to user.");
 	}
-
+	
+	/*
+	 *  This function generates a hash value of the password by applying the random generated salt.
+	 */
 	private void generatePasswordHashAndSalt(VaultUser user) {
 		SecureRandom random = new SecureRandom();
-		int ITERATIONS = 1000;
-		int KEY_LENGTH = 128;
 		byte[] salt = new byte[128];
 		random.nextBytes(salt);
-		
 		char[] password = user.getUserPassword().toCharArray();
 		
 		PBEKeySpec spec = new PBEKeySpec(password, salt, ITERATIONS, KEY_LENGTH);
@@ -67,11 +71,11 @@ public class UserService {
 			spec.clearPassword();
 		}
 	}
-		
+	
+	/*
+	 *  This function checks whether the provided password is a valid password
+	 */
 	public boolean isPasswordValid(char[] password, byte[] salt, byte[] expectedHash) {
-		int ITERATIONS = 1000;
-		int KEY_LENGTH = 128;
-		
 		PBEKeySpec spec = new PBEKeySpec(password, salt, ITERATIONS, KEY_LENGTH);
 		try {
 			SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");

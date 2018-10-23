@@ -15,12 +15,12 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.csus.vault.web.model.DigitalWillBlock;
 import com.csus.vault.web.model.VaultUser;
-import com.csus.vault.web.service.EncryptDecryptService;;
+import com.csus.vault.web.service.WillManagerService;;
 
 @Controller
 public class UploadController {
 	
-	public EncryptDecryptService uploadService;
+	public WillManagerService willService;
 	
 	@RequestMapping(value = "/upload", method = RequestMethod.GET)
 	public ModelAndView viewUploadFile(Model model, HttpServletResponse response) {
@@ -31,14 +31,14 @@ public class UploadController {
 	@RequestMapping(value = "/uploadFile", method = RequestMethod.POST)
 	public ModelAndView saveUploadFile(HttpSession session, HttpServletResponse response,
 	  @RequestParam("file") MultipartFile file, @RequestParam("privKey") String privateKey) {
-				
+		
+		VaultUser user = (VaultUser) session.getAttribute("user");
 		if (!file.isEmpty()) {
-			uploadService = new EncryptDecryptService();
-			//uploadService.upload(file, privateKey);
-			VaultUser user = (VaultUser) session.getAttribute("user");
-			
+			willService = new WillManagerService();
+			willService.upload(file, user);
+						
 			ArrayList<DigitalWillBlock> blockchain = (ArrayList<DigitalWillBlock>) session.getServletContext().getAttribute("blockchain");
-			uploadService.upload(file, user, blockchain);
+			willService.upload(file, user, blockchain);
 			System.out.println("File uploaded: " + file.getOriginalFilename());
 			/*PeerClient peer = new PeerClient(user.getEmail(), blockchain.get(blockchain.size()-1));
 			peer.run();*/
@@ -59,12 +59,12 @@ public class UploadController {
 	  @RequestParam("file") MultipartFile file, @RequestParam("privKey") String privateKey) {
 				
 		if (!file.isEmpty()) {
-			uploadService = new EncryptDecryptService();
+			willService = new WillManagerService();
 			//uploadService.upload(file, privateKey);
 			VaultUser user = (VaultUser) session.getAttribute("user");
 			
 			ArrayList<DigitalWillBlock> blockchain = (ArrayList<DigitalWillBlock>) session.getServletContext().getAttribute("blockchain");
-			uploadService.upload(file, user, blockchain);
+			willService.upload(file, user, blockchain);
 			System.out.println("File uploaded: " + file.getOriginalFilename());
 			/*PeerClient peer = new PeerClient(user.getEmail(), blockchain.get(blockchain.size()-1));
 			peer.run();*/

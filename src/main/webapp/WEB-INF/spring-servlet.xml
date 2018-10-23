@@ -31,7 +31,7 @@
 		<beans:property name="maxUploadSize" value="100000" />
 	</beans:bean>
     
-    <beans:bean class="org.springframework.orm.jpa.LocalEntityManagerFactoryBean" id="VaultDB">
-		<property value="digitalVaultDBUnit" name="persistenceUnitName"/>
+    <beans:bean class="org.springframework.orm.jpa.LocalEntityManagerFactoryBean" id="entityManagerFactory">
+		<property name="persistenceUnitName" value="digitalVaultDBUnit"/>
 	</beans:bean>
 </beans>

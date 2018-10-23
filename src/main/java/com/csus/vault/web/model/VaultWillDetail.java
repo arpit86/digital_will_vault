@@ -23,6 +23,8 @@ public class VaultWillDetail {
 	private Date will_createdTS;
 	
 	private Date will_updatedTS;
+	
+	private byte[] will_content;
 
 	public int getWillId() {
 		return willId;
@@ -54,5 +56,13 @@ public class VaultWillDetail {
 
 	public void setWill_updatedTS(Date will_updatedTS) {
 		this.will_updatedTS = will_updatedTS;
+	}
+
+	public byte[] getWill_content() {
+		return will_content;
+	}
+
+	public void setWill_content(byte[] will_content) {
+		this.will_content = will_content;
 	}
 }

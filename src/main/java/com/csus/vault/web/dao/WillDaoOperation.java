@@ -1,37 +1,48 @@
 package com.csus.vault.web.dao;
 
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.csus.vault.web.model.DigitalWillBlock;
+import com.csus.vault.web.model.VaultUser;
+import com.csus.vault.web.model.VaultWillDetail;
 
-public class WillEncryptDecryptDaoImpl implements WillEncryptDecryptDao {
+public class WillDaoOperation {
+	
+	@Autowired
+    EntityManagerFactory emf;
 	
 	private final int DIFFICULTY = 3;
 	private int nonce;
 
-	public WillEncryptDecryptDaoImpl() { }
+	public WillDaoOperation() { }
 	
-	@Override
-	public byte[] encryptUploadedFileWithPrivKey(byte[] data, PrivateKey signingKey) {
+	public byte[] encryptUploadedWillWithPubKey(byte[] willData, String userEmail) {
 		
 		byte[] encryptData = null;
 		
 		try {
 			Cipher encrypt = Cipher.getInstance("RSA");
-			encrypt.init(Cipher.ENCRYPT_MODE, signingKey);
-			encryptData = encrypt.doFinal(data);
-		
+			encrypt.init(Cipher.ENCRYPT_MODE, getPublicKey(userEmail));
+			encryptData = encrypt.doFinal(willData);
 		} catch (InvalidKeyException e) {
 			e.printStackTrace();
 		} catch (NoSuchAlgorithmException e) {
@@ -42,25 +53,58 @@ public class WillEncryptDecryptDaoImpl implements WillEncryptDecryptDao {
 			e.printStackTrace();
 		} catch (BadPaddingException e) {
 			e.printStackTrace();
-		}
-		
+		} 
 		return encryptData;
 	}
 
-	@Override
-	public PublicKey getPublicKey(String email) {
-		/*
-		 * Check whether the user'email is registered in the database.
-		 * Obtain the public key associated with the email of the user.
-		 * 
-		 */
-		
-		
-		return null;
+	/*
+	 * Obtain the public key associated with the email of the user.
+	 */
+	private PublicKey getPublicKey(String userEmail) {
+		PublicKey publicKey = null;
+		try {
+			VaultUser user = new UserDaoOperation().getUserDetailByEmail(userEmail);
+			publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(user.getUser_publicKey()));
+		} catch (InvalidKeySpecException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		return publicKey;
+	}
+	
+	/*
+	 *  Thie function will save the encrypted will to the database
+	 */
+	public void saveEncryptedWillToDB(byte[] encryptedData, VaultUser user) {
+		if(emf != null && encryptedData != null) {
+			System.out.println("WillDaoOperation:saveEncryptedWillToDB:: inside saveEncryptedWillToDB()");
+			EntityManager em = null;
+			
+			try {
+				VaultWillDetail will = new VaultWillDetail();
+				will.setOwner(user);
+				will.setWill_createdTS(new Date());
+				will.setWill_updatedTS(new Date());
+				will.setWill_content(encryptedData);
+				em = emf.createEntityManager();
+				em.getTransaction().begin();
+				em.persist(will);
+				System.out.println("WillDaoOperation:saveEncryptedWillToDB:: saved will: " + user.getUserEmail());
+				em.getTransaction().commit();
+            } catch (Exception e) {
+            	em.getTransaction().rollback();
+            	System.out.println("WillDaoOperation:saveEncryptedWillToDB:: Unable to save the Will Record: Exception: "+e.getMessage());
+            } finally {
+            	// Close EntityManager
+            	if(null != em){
+            		em.close();
+            	}
+			}
+		}
 	}
 
-	@Override
-	public byte[] decryptBlockDataWithPubKey(byte[] encryptData, String email) {
+	public byte[] decryptWillDataWithPrivateKey(byte[] encryptData, String email) {
 		
 		byte[] originalData = null;
 		
@@ -68,7 +112,6 @@ public class WillEncryptDecryptDaoImpl implements WillEncryptDecryptDao {
 			Cipher decrypt = Cipher.getInstance("RSA");
 			decrypt.init(Cipher.DECRYPT_MODE, getPublicKey(email));
 			originalData = decrypt.doFinal(encryptData);
-		
 		} catch (InvalidKeyException e) {
 			e.printStackTrace();
 		} catch (NoSuchAlgorithmException e) {
@@ -84,7 +127,6 @@ public class WillEncryptDecryptDaoImpl implements WillEncryptDecryptDao {
 		return originalData;
 	}
 
-	@Override
 	public String mineBlock(DigitalWillBlock willBlock) {
 		
 		String minedHash = new String(new char[DIFFICULTY]).replace('\0', 'a');
@@ -127,4 +169,6 @@ public class WillEncryptDecryptDaoImpl implements WillEncryptDecryptDao {
 			throw new RuntimeException(e);
 		}
 	}
+
+	
 }

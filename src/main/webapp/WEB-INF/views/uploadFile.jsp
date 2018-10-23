@@ -15,6 +15,7 @@
         	<br/>Please feel free to share your public token with anyone who wants to digitally verify your will.
         	<br/>Keep the private token safe so that no can use it to create a duplicate will.
         </p>
+        <br/>
         <form action = "uploadFile" method = "post" enctype = "multipart/form-data">
         	<table border="0">
                 <!-- <tr>

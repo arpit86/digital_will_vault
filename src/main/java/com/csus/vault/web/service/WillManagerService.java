@@ -1,38 +1,40 @@
 package com.csus.vault.web.service;
 
 import java.io.IOException;
-import java.security.PrivateKey;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.csus.vault.web.dao.WillEncryptDecryptDao;
-import com.csus.vault.web.dao.WillEncryptDecryptDaoImpl;
+import com.csus.vault.web.dao.WillDaoOperation;
 import com.csus.vault.web.model.DigitalWillBlock;
 import com.csus.vault.web.model.VaultUser;
 
-public class EncryptDecryptService {
+public class WillManagerService {
 	
 	
-	WillEncryptDecryptDao willEncryptDecryptDao = new WillEncryptDecryptDaoImpl();
+	WillDaoOperation willDao = new WillDaoOperation();
 
-	public void upload(MultipartFile file, PrivateKey privateKey) {
+	public void upload(MultipartFile file, VaultUser user) {
 
 		try {
 			byte[] bytes = file.getBytes();
 			
-			// Encrypting the file data with user's Private key
-			byte[] signedData = willEncryptDecryptDao.encryptUploadedFileWithPrivKey(bytes, privateKey);
-			byte[] decryptData = willEncryptDecryptDao.decryptBlockDataWithPubKey(signedData, "email");
-			System.err.println(decryptData);
+			// Encrypting the file data with user's Public key
+			byte[] encryptedData = willDao.encryptUploadedWillWithPubKey(bytes, user.getUserEmail());
+			
+			// Saving the encrypted will to database
+			willDao.saveEncryptedWillToDB(encryptedData, user);
+			//byte[] decryptData = willEncryptDecryptDao.decryptBlockDataWithPubKey(signedData, "email");
+			//System.err.println(decryptData);
 		} catch(IOException io) {
 			
 		}
 		
 	}
 
+	//adding to blockchain
 	public void upload(MultipartFile file, VaultUser user, ArrayList<DigitalWillBlock> blockchain) {
 		try {
 			byte[] bytes = file.getBytes();
@@ -45,7 +47,7 @@ public class EncryptDecryptService {
 			} else {
 				willBlock.setPreviousHash(blockchain.get(blockchain.size()-1).getHash());
 			}
-			String hash = willEncryptDecryptDao.mineBlock(willBlock);
+			String hash = willDao.mineBlock(willBlock);
 			willBlock.setHash(hash);
 			blockchain.add(willBlock);
 			

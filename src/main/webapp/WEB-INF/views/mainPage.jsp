@@ -14,22 +14,22 @@
 		<p align="center">Please select the operation you wish to perform from the below options:</p>
 		<br/>
 		<t3>If you wish to upload a new Will, please select the link below</t3>
-		<table align="center">
+		<table>
 			<tr>
-				<td><a href="uploadFile">Upload a New Will</a></td>
+				<td align="center"><a href="uploadFile">Upload a New Will</a></td>
 			</tr>
 		</table>
 		<br/>
 		<t3>If you wish to view a new Will, please select the link below</t3>
-		<table align="center">
+		<table>
 			<tr>
-				<td><a href="viewWill">View Existing Will</a></td>
+				<td align="center"><a href="viewWill">View Existing Will</a></td>
 			</tr>
 		</table>
 		<t3>If you wish to modify the lastest Will, please select the link below</t3>
-		<table align="center">
+		<table>
 			<tr>
-				<td><a href="modifyWill">Modify Existing Will</a></td>
+				<td align="center"><a href="modifyWill">Modify Existing Will</a></td>
 			</tr>
 		</table>
 </body>
