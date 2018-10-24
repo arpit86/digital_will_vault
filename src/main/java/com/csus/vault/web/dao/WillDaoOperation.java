@@ -74,7 +74,7 @@ public class WillDaoOperation {
 	}
 	
 	/*
-	 *  Thie function will save the encrypted will to the database
+	 *  Thie function will save the encrypted will to the database.
 	 */
 	public void saveEncryptedWillToDB(byte[] encryptedData, VaultUser user) {
 		if(emf != null && encryptedData != null) {
@@ -83,10 +83,10 @@ public class WillDaoOperation {
 			
 			try {
 				VaultWillDetail will = new VaultWillDetail();
-				will.setOwner(user);
+				will.setVault_userId(user.getUserId());
 				will.setWill_createdTS(new Date());
 				will.setWill_updatedTS(new Date());
-				will.setWill_content(encryptedData);
+				will.setWillContent(encryptedData);
 				em = emf.createEntityManager();
 				em.getTransaction().begin();
 				em.persist(will);

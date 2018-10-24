@@ -2,20 +2,13 @@ package com.csus.vault.web.model;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
-@Entity
-@Table(name="vault_transaction_detail")
+/*@Entity
+@Table(name="vault_transaction_detail")*/
 public class VaultTransactionDetail {
 	
-	@Id
+	/*@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="transaction_id", unique=true, nullable=false)
+	@Column(name="transaction_id", unique=true, nullable=false)*/
 	private int transactionId;
 	
 	private int transactionTypeId;

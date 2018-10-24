@@ -1,60 +1,86 @@
 package com.csus.vault.web.model;
 
+import java.io.Serializable;
+import javax.persistence.*;
 import java.util.Date;
-import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
 
+/**
+ * The persistent class for the vault_authorized_user database table.
+ * 
+ */
 @Entity
 @Table(name="vault_authorized_user")
-public class VaultAuthorizedUser {
-	
+@NamedQuery(name="VaultAuthorizedUser.findAll", query="SELECT v FROM VaultAuthorizedUser v")
+public class VaultAuthorizedUser implements Serializable {
+	private static final long serialVersionUID = 1L;
+
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="id", unique=true, nullable=false)
-	private int id;
-	
-	private VaultWillDetail will;
-	
-	private List<VaultUser> authorizedUsers;
-	
-	private Date user_authorizedTS;
+	private int authorized_userId;
 
-	public int getId() {
-		return id;
+	@Column(name="authorized_update")
+	private byte authorizedUpdate;
+
+	@Column(name="authorized_view")
+	private byte authorizedView;
+
+	@Temporal(TemporalType.DATE)
+	private Date authorizedTS;
+
+	private int vault_userId;
+
+	@Column(name="will_id")
+	private int willId;
+
+	public VaultAuthorizedUser() {
 	}
 
-	public void setId(int id) {
-		this.id = id;
+	public int getAuthorized_userId() {
+		return this.authorized_userId;
 	}
 
-	public VaultWillDetail getWill() {
-		return will;
+	public void setAuthorized_userId(int authorized_userId) {
+		this.authorized_userId = authorized_userId;
 	}
 
-	public void setWill(VaultWillDetail will) {
-		this.will = will;
+	public byte getAuthorizedUpdate() {
+		return this.authorizedUpdate;
 	}
 
-	public List<VaultUser> getAuthorizedUsers() {
-		return authorizedUsers;
+	public void setAuthorizedUpdate(byte authorizedUpdate) {
+		this.authorizedUpdate = authorizedUpdate;
 	}
 
-	public void setAuthorizedUsers(List<VaultUser> authorizedUsers) {
-		this.authorizedUsers = authorizedUsers;
+	public byte getAuthorizedView() {
+		return this.authorizedView;
 	}
 
-	public Date getUser_authorizedTS() {
-		return user_authorizedTS;
+	public void setAuthorizedView(byte authorizedView) {
+		this.authorizedView = authorizedView;
 	}
 
-	public void setUser_authorizedTS(Date user_authorizedTS) {
-		this.user_authorizedTS = user_authorizedTS;
+	public Date getAuthorizedTS() {
+		return this.authorizedTS;
+	}
+
+	public void setAuthorizedTS(Date authorizedTS) {
+		this.authorizedTS = authorizedTS;
+	}
+
+	public int getVault_userId() {
+		return this.vault_userId;
+	}
+
+	public void setVault_userId(int vault_userId) {
+		this.vault_userId = vault_userId;
+	}
+
+	public int getWillId() {
+		return this.willId;
+	}
+
+	public void setWillId(int willId) {
+		this.willId = willId;
 	}
 
 }

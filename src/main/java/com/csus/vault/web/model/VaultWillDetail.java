@@ -1,49 +1,65 @@
 package com.csus.vault.web.model;
 
+import java.io.Serializable;
+import javax.persistence.*;
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
 
+/**
+ * The persistent class for the vault_will_detail database table.
+ * 
+ */
 @Entity
 @Table(name="vault_will_detail")
-public class VaultWillDetail {
-	
+@NamedQuery(name="VaultWillDetail.findAll", query="SELECT v FROM VaultWillDetail v")
+public class VaultWillDetail implements Serializable {
+	private static final long serialVersionUID = 1L;
+
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="will_id", unique=true, nullable=false)
+	@Column(name="will_id")
 	private int willId;
-	
-	private VaultUser owner;
-	
+
+	private int vault_userId;
+
+	@Column(name="will_content")
+	private byte[] willContent;
+
+	@Temporal(TemporalType.DATE)
 	private Date will_createdTS;
-	
+
+	@Temporal(TemporalType.DATE)
 	private Date will_updatedTS;
-	
-	private byte[] will_content;
+
+	public VaultWillDetail() {
+	}
 
 	public int getWillId() {
-		return willId;
+		return this.willId;
 	}
 
 	public void setWillId(int willId) {
 		this.willId = willId;
 	}
 
-	public VaultUser getOwner() {
-		return owner;
+	public int getVault_userId() {
+		return this.vault_userId;
 	}
 
-	public void setOwner(VaultUser owner) {
-		this.owner = owner;
+	public void setVault_userId(int vault_userId) {
+		this.vault_userId = vault_userId;
+	}
+
+	public byte[] getWillContent() {
+		return this.willContent;
+	}
+
+	public void setWillContent(byte[] willContent) {
+		this.willContent = willContent;
 	}
 
 	public Date getWill_createdTS() {
-		return will_createdTS;
+		return this.will_createdTS;
 	}
 
 	public void setWill_createdTS(Date will_createdTS) {
@@ -51,18 +67,11 @@ public class VaultWillDetail {
 	}
 
 	public Date getWill_updatedTS() {
-		return will_updatedTS;
+		return this.will_updatedTS;
 	}
 
 	public void setWill_updatedTS(Date will_updatedTS) {
 		this.will_updatedTS = will_updatedTS;
 	}
 
-	public byte[] getWill_content() {
-		return will_content;
-	}
-
-	public void setWill_content(byte[] will_content) {
-		this.will_content = will_content;
-	}
 }
