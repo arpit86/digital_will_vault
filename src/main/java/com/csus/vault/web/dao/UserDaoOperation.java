@@ -1,13 +1,10 @@
 package com.csus.vault.web.dao;
 
-import java.util.Date;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.csus.vault.web.model.VaultTransactionDetail;
 import com.csus.vault.web.model.VaultUser;
 
 public class UserDaoOperation {
@@ -59,32 +56,21 @@ public class UserDaoOperation {
 	public void register(VaultUser user) {
 		if(emf != null && user != null) {
 			System.out.println("UserDaoOperation:register:: inside register()");
-			EntityManager em1 = null;
-			EntityManager em2 = null;
-			
+			EntityManager em = null;
+						
 			try {
-				em1 = emf.createEntityManager();
-				em1.getTransaction().begin();
-				em1.persist(user);
+				em = emf.createEntityManager();
+				em.getTransaction().begin();
+				em.persist(user);
 				System.out.println("UserDaoOperation:register:: saved user: " + user.getUserEmail());
-				em1.getTransaction().commit();
-				VaultTransactionDetail trans = new VaultTransactionDetail();
-				trans.setTransactionTypeId(2);
-				trans.setTransactionTS(new Date());
-				trans.setUserID(user.getUserId());
-				em2 = emf.createEntityManager();
-				em2.getTransaction().begin();
-				em2.persist(trans);
-				em2.getTransaction().commit();
+				em.getTransaction().commit();
 			} catch (Exception e) {
-            	em1.getTransaction().rollback();
-            	em2.getTransaction().rollback();
+            	em.getTransaction().rollback();
             	System.out.println("UserDaoOperation:register:: Unable to register the User Record: Exception: "+e.getMessage());
             } finally {
             	// Close EntityManager
-            	if(null != em1 && null != em2){
-            		em1.close();
-            		em2.clear();
+            	if(null != em){
+            		em.close();
             	}
 			}
 		}

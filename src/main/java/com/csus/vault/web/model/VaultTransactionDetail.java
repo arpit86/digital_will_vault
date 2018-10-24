@@ -21,10 +21,6 @@ public class VaultTransactionDetail {
 		return transactionId;
 	}
 
-	public void setTransactionId(int transactionId) {
-		this.transactionId = transactionId;
-	}
-
 	public int getTransactionTypeId() {
 		return transactionTypeId;
 	}

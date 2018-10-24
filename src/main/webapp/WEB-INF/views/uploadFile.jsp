@@ -7,23 +7,23 @@
         <title>Will upload to Digital Vault</title>
     </head>
     <body>
-	    Welcome to your Personal Vault
+	    <t3>Welcome to your Personal Vault ${name}</t3>
         
         <br/>
-        <p> Please upload your digital will using the Browse button.
-        	<br/>An email was sent to the ${name} which contains your public token and your private token.
+        <p> 
+        	<br/>An email was sent to the registered Email id which contains your public token and your private token.
         	<br/>Please feel free to share your public token with anyone who wants to digitally verify your will.
         	<br/>Keep the private token safe so that no can use it to create a duplicate will.
         </p>
         <br/>
+        <p>
+        	The file format accepted are PDF, TEXT and DOC.  Please upload file in these format only.
+        </p>
+        <br/>
         <form action = "uploadFile" method = "post" enctype = "multipart/form-data">
         	<table border="0">
-                <!-- <tr>
-                    <td>Please provide the private key token:</td>
-                    <td><input type = "text" name = "privKey" size = "50"/></td>
-                </tr> -->
                 <tr>
-                	<td>Please select the file:</td>
+                	<td>Please upload your digital will using the Browse button:</td>
                 	<td><input type = "file" name = "file" accept=".pdf, .txt, .doc"/></td>
                	</tr>
          		<tr>

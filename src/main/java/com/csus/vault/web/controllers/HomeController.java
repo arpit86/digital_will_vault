@@ -40,13 +40,10 @@ public class HomeController {
 	  @ModelAttribute("user") VaultUser user) {
 		
 		System.out.println("Register User: "+ user.getUser_firstName() +" "+ user.getUser_lastName());
-		
 		userService = new UserService();
 		request.getSession().setAttribute("user",user);
 		if(userService.verify(user)) {
 			userService.register(user);
-			/*ServletContext context = request.getSession().getServletContext();
-			context.setAttribute("blockchain", new ArrayList<>());*/
 			return new ModelAndView("mainPage", "name", user.getUser_firstName() + " " + user.getUser_lastName());
 		} else {
 			return new ModelAndView("login", "user", new VaultUser());
@@ -73,8 +70,6 @@ public class HomeController {
 			if(userService.isPasswordValid(user.getUserPassword().toCharArray(), dbUser.getPasswordSalt().getBytes(Charset.forName("UTF-8")), 
 					dbUser.getUserPassword().getBytes(Charset.forName("UTF-8")))){
 				System.out.println("User is verified");
-				ServletContext context = request.getSession().getServletContext();
-				context.setAttribute("blockchain", new ArrayList<>());
 				mv = new ModelAndView("mainPage", "name", user.getUser_firstName() + " " + user.getUser_lastName());
 			} 
 		}

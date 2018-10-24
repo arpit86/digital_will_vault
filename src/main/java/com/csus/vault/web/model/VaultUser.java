@@ -55,10 +55,6 @@ public class VaultUser implements Serializable {
 		return this.userId;
 	}
 
-	public void setUserId(int userId) {
-		this.userId = userId;
-	}
-
 	public String getPasswordSalt() {
 		return this.passwordSalt;
 	}

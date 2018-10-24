@@ -25,6 +25,7 @@ public class BlockManagerService {
 	 *  and the public key is available publicly to send will owner view request.
 	 */
 	public void createBlockWithPublicKeyTransaction(VaultUser user) {
+		System.out.println("BlockManagerService:createBlockWithPublicKeyTransaction:: Inside the function.");
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
 		trans.setTransactionType(TRANSACTION_TYPE_PUBLIC_KEY_UPLOAD);
@@ -39,6 +40,7 @@ public class BlockManagerService {
 	 *  When a user/owner uploads a digital will, the will is encrypted and uploaded to the database.
 	 */
 	public void createBlockWithWillUploadTransaction(VaultWillDetail will) {
+		System.out.println("BlockManagerService:createBlockWithWillUploadTransaction:: Inside the function.");
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
 		trans.setTransactionType(TRANSACTION_TYPE_WILL_UPLOAD);
@@ -53,6 +55,7 @@ public class BlockManagerService {
 	 *  When a user/owner updates a digital will, the will is again encrypted and uploaded to the database.
 	 */
 	public void createBlockWithWillUpdateTransaction(VaultWillDetail will) {
+		System.out.println("BlockManagerService:createBlockWithWillUpdateTransaction:: Inside the function.");
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
 		trans.setTransactionType(TRANSACTION_TYPE_WILL_VIEW);
@@ -67,6 +70,7 @@ public class BlockManagerService {
 	 *  When an authorized user/owner views an existing digital will, the activity is captured and stored in database.
 	 */
 	public void createBlockWithWillViewedTransaction(VaultWillDetail will) {
+		System.out.println("BlockManagerService:createBlockWithWillViewedTransaction:: Inside the function.");
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
 		trans.setTransactionType(TRANSACTION_TYPE_WILL_UPDATE);
@@ -80,7 +84,7 @@ public class BlockManagerService {
 	 *  This function creates block for single transactions.
 	 */
 	private void generateBlock(Transaction transaction) {
-		
+		System.out.println("BlockManagerService:generateBlock:: Create a block for the transaction:" + transaction.getTransactionType());
 		BlockStructure block = new BlockStructure();
 		block.setTimeStamp(new Timestamp(System.currentTimeMillis()));
 		block.setTransaction(transaction);
@@ -88,8 +92,9 @@ public class BlockManagerService {
 		
 		//Need to obtain the block number from the blockchain to figure out if this is a genesis block
 		/*blockchain.size() <= 0 */
-		//PeerConnectionService peer = new PeerConnectionService(user.getEmail(),block);
-		//peer.run();
+		//PeerConnectionService peer = new PeerConnectionService(willBlock.getEmail(), block);
+		//start the server listening thread
+		//peer.start();
 		if(block.getPreviousHash().isEmpty()) {
 			block.setPreviousHash("0");
 		} else {
@@ -103,6 +108,7 @@ public class BlockManagerService {
 	}
 	
 	private String mineBlock(BlockStructure willBlock) {
+		System.out.println("BlockManagerService:mineBlock:: Mining block for Proof of Work consensus.");
 		String minedHash = new String(new char[DIFFICULTY]).replace('\0', 'a');
 		String prevHash = willBlock.getPreviousHash();
 		Timestamp timeStamp = willBlock.getTimeStamp();
@@ -127,12 +133,13 @@ public class BlockManagerService {
 	 *  It applies SHA-256 hashing algorithm to the block.
 	 */
 	private String applySha256ToBlockData(String string) {
+		StringBuffer hexDataValue = null;
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");	        
 
 			//Applying SHA-256 hashing algorithm to the input 
 			byte[] blockHash = digest.digest(string.getBytes("UTF-8"));	        
-			StringBuffer hexDataValue = new StringBuffer();
+			hexDataValue = new StringBuffer();
 			for (int i = 0; i < blockHash.length; i++) {
 				String hex = Integer.toHexString(0xff & blockHash[i]);
 				if(hex.length() == 1) {
@@ -140,10 +147,9 @@ public class BlockManagerService {
 				}
 				hexDataValue.append(hex);
 			}
-			return hexDataValue.toString();
 		} catch(Exception e) {
-			throw new RuntimeException(e);
+			System.out.println("BlockManagerService:applySha256ToBlockData:: Exeption: " + e.getMessage());
 		}
+		return hexDataValue.toString();
 	}
-
 }

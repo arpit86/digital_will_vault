@@ -13,66 +13,53 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.csus.vault.web.model.DigitalWillBlock;
 import com.csus.vault.web.model.VaultUser;
-import com.csus.vault.web.service.WillManagerService;;
+import com.csus.vault.web.model.VaultWillDetail;
+import com.csus.vault.web.service.WillManagerService;
+import com.mysql.cj.x.protobuf.MysqlxCrud.ViewAlgorithm;;
 
 @Controller
 public class UploadController {
 	
-	public WillManagerService willService;
+	private WillManagerService willService = null;
 	
 	@RequestMapping(value = "/upload", method = RequestMethod.GET)
 	public ModelAndView viewUploadFile(Model model, HttpServletResponse response) {
 		return new ModelAndView("uploadFile");
 	}
 	
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/uploadFile", method = RequestMethod.POST)
 	public ModelAndView saveUploadFile(HttpSession session, HttpServletResponse response,
 	  @RequestParam("file") MultipartFile file, @RequestParam("privKey") String privateKey) {
-		
+		ModelAndView mv = new ModelAndView("authorizeUserView");
 		VaultUser user = (VaultUser) session.getAttribute("user");
 		if (!file.isEmpty()) {
 			willService = new WillManagerService();
 			willService.upload(file, user);
-						
-			ArrayList<DigitalWillBlock> blockchain = (ArrayList<DigitalWillBlock>) session.getServletContext().getAttribute("blockchain");
-			willService.upload(file, user, blockchain);
-			System.out.println("File uploaded: " + file.getOriginalFilename());
-			/*PeerClient peer = new PeerClient(user.getEmail(), blockchain.get(blockchain.size()-1));
-			peer.run();*/
-			return new ModelAndView("authorizeUserView");
+			VaultWillDetail will = willService.getWillDetailbyUserId(user);
+			session.setAttribute("will", will);
 		} else {
 			String error = null;
-			return new ModelAndView("error", error,"File Upload failed. Try again.");
+			mv = new ModelAndView("error", error,"File Upload failed. Try again.");
 		}
+		return mv;
 	}
 	
 	@RequestMapping(value = "/authorizeUserView", method = RequestMethod.GET)
 	public ModelAndView viewAuthorizeUsers(Model model, HttpServletResponse response) {
-		return new ModelAndView("authorizeUserView");
+		return new ModelAndView("authorizeUserView", "authorizedUserList", new ArrayList<VaultUser>());
 	}
 	
 	@RequestMapping(value = "/authorizeUserView", method = RequestMethod.POST)
 	public ModelAndView saveAuthorizedUsers(HttpSession session, HttpServletResponse response,
-	  @RequestParam("file") MultipartFile file, @RequestParam("privKey") String privateKey) {
-				
-		if (!file.isEmpty()) {
-			willService = new WillManagerService();
-			//uploadService.upload(file, privateKey);
-			VaultUser user = (VaultUser) session.getAttribute("user");
-			
-			ArrayList<DigitalWillBlock> blockchain = (ArrayList<DigitalWillBlock>) session.getServletContext().getAttribute("blockchain");
-			willService.upload(file, user, blockchain);
-			System.out.println("File uploaded: " + file.getOriginalFilename());
-			/*PeerClient peer = new PeerClient(user.getEmail(), blockchain.get(blockchain.size()-1));
-			peer.run();*/
-			return new ModelAndView("authorizeUserView");
-		} else {
-			String error = null;
-			return new ModelAndView("error", error,"File Upload failed. Try again.");
-		}
+	  @RequestParam("authorizedUserList") ArrayList<VaultUser> authorizedUserList) {
+		ModelAndView mv = new ModelAndView("mainPage");
+		VaultUser user = (VaultUser) session.getAttribute("user");
+		VaultWillDetail will = (VaultWillDetail) session.getAttribute("will");
+		willService = new WillManagerService();
+		willService.addAuthorizedWillUser(authorizedUserList, will);
+		System.out.println("File uploaded: ");
+		return mv;
 	}
 
 }

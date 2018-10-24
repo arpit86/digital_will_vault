@@ -14,25 +14,32 @@ import com.csus.vault.web.model.VaultUser;
 
 public class UserService {
 	
-	private UserDaoOperation userDao = new UserDaoOperation();
+	private UserDaoOperation userDao = null;
+	private BlockManagerService blockService = null;
+	private EmailService emailService = null;
 	private final int ITERATIONS = 1000;
 	private final int KEY_LENGTH = 128;
 
 	public void register(VaultUser user) {
 		try {
+			userDao = new UserDaoOperation();
 			generateKeyPair(user);
 			generatePasswordHashAndSalt(user);
 			userDao.register(user);
+			blockService = new BlockManagerService();
+			blockService.createBlockWithPublicKeyTransaction(user);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public boolean verify(VaultUser user) {
+		userDao = new UserDaoOperation();
 		return userDao.verify(user);
 	}
 	
 	public VaultUser getUserDetailByEmail(String userEmail) {
+		userDao = new UserDaoOperation();
 		return userDao.getUserDetailByEmail(userEmail);
 	}
 	
@@ -46,7 +53,8 @@ public class UserService {
         user.setUser_publicKey(keyGen.genKeyPair().getPublic().getEncoded());
         
         //Send an email to user with private key to the user email
-        new EmailService().sendEmailContainingThePrivateKey(keyGen.genKeyPair().getPrivate().getEncoded(), user.getUserEmail());
+        emailService = new EmailService();
+        emailService.sendEmailContainingThePrivateKey(keyGen.genKeyPair().getPrivate().getEncoded(), user.getUserEmail());
         
         System.out.println("Public key is saved in database and the Private key is emailed to user.");
 	}
@@ -92,5 +100,17 @@ public class UserService {
 			spec.clearPassword();
 		}	
 	    return true;
+	}
+	
+	public void registerAuthorizeUser(VaultUser user) {
+		try {
+			userDao = new UserDaoOperation();
+			generateKeyPair(user);
+			userDao.register(user);
+			blockService = new BlockManagerService();
+			blockService.createBlockWithPublicKeyTransaction(user);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
 	}
 }

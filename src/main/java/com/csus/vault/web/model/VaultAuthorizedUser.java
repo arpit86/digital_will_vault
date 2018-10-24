@@ -16,13 +16,14 @@ public class VaultAuthorizedUser implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
 	private int authorized_userId;
 
 	@Column(name="authorized_update")
-	private byte authorizedUpdate;
+	private boolean authorizedUpdate;
 
 	@Column(name="authorized_view")
-	private byte authorizedView;
+	private boolean authorizedView;
 
 	@Temporal(TemporalType.DATE)
 	private Date authorizedTS;
@@ -39,23 +40,19 @@ public class VaultAuthorizedUser implements Serializable {
 		return this.authorized_userId;
 	}
 
-	public void setAuthorized_userId(int authorized_userId) {
-		this.authorized_userId = authorized_userId;
-	}
-
-	public byte getAuthorizedUpdate() {
+	public boolean getAuthorizedUpdate() {
 		return this.authorizedUpdate;
 	}
 
-	public void setAuthorizedUpdate(byte authorizedUpdate) {
+	public void setAuthorizedUpdate(boolean authorizedUpdate) {
 		this.authorizedUpdate = authorizedUpdate;
 	}
 
-	public byte getAuthorizedView() {
+	public boolean getAuthorizedView() {
 		return this.authorizedView;
 	}
 
-	public void setAuthorizedView(byte authorizedView) {
+	public void setAuthorizedView(boolean authorizedView) {
 		this.authorizedView = authorizedView;
 	}
 
