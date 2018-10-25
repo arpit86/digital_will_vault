@@ -95,7 +95,7 @@
 			</tr>
 			</c:forEach>
 		</table>
-		<input type="submit" value="Upload File"/>
+		<input type="submit" value="Authorize User"/>
 </form>
 </body>
 </html>

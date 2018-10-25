@@ -83,4 +83,9 @@ public class EmailService {
 		return file;
 	}
 
+	public void sendEmailAuthorizeUserToRegister(String userEmail) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

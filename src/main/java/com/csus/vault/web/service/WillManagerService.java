@@ -125,12 +125,13 @@ public class WillManagerService {
 
 	public void addAuthorizedWillUser(ArrayList<VaultUser> authorizedUserList, VaultWillDetail will) {
 		
-		UserDaoOperation userDao = new UserDaoOperation();
+		UserService userService = new UserService();
 		for(VaultUser u: authorizedUserList) {
-			if(userDao.verify(u)) {
+			if(userService.verify(u)) {
 				u.setUser_createdTS(new Date());
 				u.setUser_updatedTS(new Date());
-				userDao.register(u);
+				userService.registerAuthorizeUser(u);
+				
 			}
 		}
 		

@@ -109,6 +109,8 @@ public class UserService {
 			userDao.register(user);
 			blockService = new BlockManagerService();
 			blockService.createBlockWithPublicKeyTransaction(user);
+			emailService = new EmailService();
+			emailService.sendEmailAuthorizeUserToRegister(user.getUserEmail());
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
