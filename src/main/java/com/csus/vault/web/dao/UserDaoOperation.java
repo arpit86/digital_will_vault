@@ -1,16 +1,19 @@
 package com.csus.vault.web.dao;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceContext;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.csus.vault.web.model.VaultUser;
 
+@Repository
+@Transactional
 public class UserDaoOperation {
 	
-	@Autowired
-	private EntityManagerFactory emf;
+	@PersistenceContext
+    private EntityManager manager;
 	
 	/*
 	 *  This function checks whether a user exists in the database.
@@ -19,16 +22,10 @@ public class UserDaoOperation {
 	 */
 	public boolean verify(VaultUser user) {
 		boolean isValid = false;
-		
-		if (null != emf && null != user) {
+		if (null != manager && null != user) {
 			System.out.println("UserDaoOperation:verify:: inside verify()");
-            EntityManager em = null;
-            
             try {
-                em = emf.createEntityManager();
-                em.getTransaction().begin();
-                VaultUser userElement = em.find(VaultUser.class, user.getUserEmail());
-                
+                VaultUser userElement = manager.find(VaultUser.class, user.getUserEmail());
                 if(null != userElement && userElement.getUserEmail().equalsIgnoreCase(user.getUserEmail())){
                 	System.out.println("UserDaoOperation:verify:: user already present in database.");
                     isValid = false;
@@ -36,15 +33,9 @@ public class UserDaoOperation {
                 	System.out.println("UserDaoOperation:verify:: user does not exist in database.");
                 	isValid = true;
                 }
-                em.getTransaction().commit();
-            } catch (Exception e) {
-            	em.getTransaction().rollback();
-            	System.out.println("UserDaoOperation:verify:: Exeption: " + e.getMessage());
-            } finally {
-            	// Close EntityManager
-            	if(null != em){
-            		em.close();
-            	}
+            } catch (Exception ex) {
+            	System.out.println("UserDaoOperation:verify:: Exeption: " + ex.getMessage());
+            	throw(ex);
             }
 		}
 	    return isValid;
@@ -54,25 +45,15 @@ public class UserDaoOperation {
 	 * This function saves a new user to the database.
 	 */
 	public void register(VaultUser user) {
-		if(emf != null && user != null) {
+		if(manager != null && user != null) {
 			System.out.println("UserDaoOperation:register:: inside register()");
-			EntityManager em = null;
-						
 			try {
-				em = emf.createEntityManager();
-				em.getTransaction().begin();
-				em.persist(user);
+				manager.persist(user);
 				System.out.println("UserDaoOperation:register:: saved user: " + user.getUserEmail());
-				em.getTransaction().commit();
-			} catch (Exception e) {
-            	em.getTransaction().rollback();
-            	System.out.println("UserDaoOperation:register:: Unable to register the User Record: Exception: "+e.getMessage());
-            } finally {
-            	// Close EntityManager
-            	if(null != em){
-            		em.close();
-            	}
-			}
+			} catch (Exception ex) {
+            	System.out.println("UserDaoOperation:register:: Unable to register the User Record: Exception: "+ ex.getMessage());
+            	throw(ex);
+            }
 		}
 	}
 
@@ -81,24 +62,13 @@ public class UserDaoOperation {
 	 */
 	public VaultUser getUserDetailByEmail(String userEmail) {
 		VaultUser user = null;
-		
-		if (null != emf && !userEmail.isEmpty()) {
+		if (null != manager && !userEmail.isEmpty()) {
 			System.out.println("UserDaoOperation:getUserDetailByEmail:: inside verify()");
-            EntityManager em = null;
-            
             try {
-                em = emf.createEntityManager();
-                em.getTransaction().begin();
-                user = em.find(VaultUser.class, userEmail);
-                em.getTransaction().commit();
-            } catch (Exception e) {
-            	em.getTransaction().rollback();
-            	System.out.println("UserDaoOperation:getUserDetailByEmail:: Exeption: " + e.getMessage());
-            } finally {
-            	// Close EntityManager
-            	if(null != em){
-            		em.close();
-            	}
+                user = manager.find(VaultUser.class, userEmail);
+            } catch (Exception ex) {
+            	System.out.println("UserDaoOperation:getUserDetailByEmail:: Exeption: " + ex.getMessage());
+            	throw(ex);
             }
 		}
 		return user;

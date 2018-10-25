@@ -1,10 +1,8 @@
 package com.csus.vault.web.controllers;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Locale;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 

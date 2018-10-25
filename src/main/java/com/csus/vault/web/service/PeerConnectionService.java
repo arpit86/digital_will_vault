@@ -9,7 +9,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
-import com.csus.vault.web.model.DigitalWillBlock;
+import com.csus.vault.web.block.BlockStructure;
 import com.csus.vault.web.model.PeerInfo;
 
 public class PeerConnectionService extends Thread{
@@ -18,16 +18,14 @@ public class PeerConnectionService extends Thread{
 	private ArrayList <PeerInfo> peerList;
 	private String email = "";
 	private Integer port;
-	private DigitalWillBlock block;
+	private BlockStructure block;
 	private PrintWriter outWriter; 
 	private BufferedReader inReader;
 	PeerInfo peerInfo;
 	 
-	
-	@SuppressWarnings("resource")
-	public PeerConnectionService(String email, DigitalWillBlock block){
+	public PeerConnectionService(String email, BlockStructure blockInfo){
     	this.email = email;
-    	this.block = block;
+    	this.block = blockInfo;
     	this.peerList = new ArrayList<PeerInfo>();
     	
     	// Establish a connection with boot node server on port 2999
@@ -98,60 +96,62 @@ public class PeerConnectionService extends Thread{
 	}*/
 	
 	@SuppressWarnings("resource")
-	public void run(){
+	public void run() {
 		try {
-			
-			for(PeerInfo p: peerList) {
-				Socket peerSocket = new Socket("127.0.0.1", p.getPort()); 
-        		outWriter = new PrintWriter(peerSocket.getOutputStream(), true);
-        		outWriter.println(email);
-        		p.setSocket(peerSocket);
-        		System.out.println("Connected to peer "+ p.getEmail());
+
+			for (PeerInfo p : peerList) {
+				Socket peerSocket = new Socket("127.0.0.1", p.getPort());
+				outWriter = new PrintWriter(peerSocket.getOutputStream(), true);
+				outWriter.println(email);
+				p.setSocket(peerSocket);
+				System.out.println("Connected to peer " + p.getEmail());
 			}
-			
-			//Start server socket for listening at same port used for connection to boot node
+
+			// Start server socket for listening at same port used for connection to boot
+			// node
 			ServerSocket serverSocket = new ServerSocket(port);
-				
-			//keep listening for incoming connections
-			while(true) {
-				System.out.println(email+" Server listening for connections on port: "+port);
-				//accept is a blocking call meaning that code won't execute further until a peer connects to server
+
+			// keep listening for incoming connections
+			while (true) {
+				System.out.println(email + " Server listening for connections on port: " + port);
+				// accept is a blocking call meaning that code won't execute further until a
+				// peer connects to server
 				Socket socket = serverSocket.accept();
-									
-				//peer connected at this point
-				System.out.println("Connection was established on port: "+ socket.getPort());
-				
-				// takes input from the client socket 
-		        inReader = new BufferedReader(new InputStreamReader(socket.getInputStream())); 
-		        String data = "";
-		  		
-		        	try { 
-		        		data = inReader.readLine(); 
-		        		System.out.println(email+" received connection request from user "+data);
-		                	//create a peer object to store this peer's data
-		    				PeerInfo peer = new PeerInfo();
-		                	peer.setEmail(data);
-		                	//get the peer's port number from socket
-		    				peer.setPort(socket.getPort());
-		    				peer.setSocket(socket);
-		    				//Adding the peer to the Arraylist
-		    				peerList.add(peer);
-		    				System.out.println("Connected to "+ peer.getEmail() +" on port "+ socket.getPort());
-		            } catch(IOException io){ 
-		                io.printStackTrace(); 
-		            } 
-		            
-		        //create a peer object to store this peer's data
-				/*PeerInfo peer = new PeerInfo();
-				
-				//the only data the peer sends to other peer for now is his email id
-				peer.setEmail(data);
-				//get the peer's port number from socket
-				peer.setPort(socket.getPort());
-				peer.setSocket(socket);
-				//Adding the peer to the Arraylist
-				peerList.add(peer);*/
-				//System.out.println("The peer trying to connect is: "+ peer.getEmail() +" on the port: "+ socket.getPort());
+
+				// peer connected at this point
+				System.out.println("Connection was established on port: " + socket.getPort());
+
+				// takes input from the client socket
+				inReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				String data = "";
+
+				try {
+					data = inReader.readLine();
+					System.out.println(email + " received connection request from user " + data);
+					// create a peer object to store this peer's data
+					PeerInfo peer = new PeerInfo();
+					peer.setEmail(data);
+					// get the peer's port number from socket
+					peer.setPort(socket.getPort());
+					peer.setSocket(socket);
+					// Adding the peer to the Arraylist
+					peerList.add(peer);
+					System.out.println("Connected to " + peer.getEmail() + " on port " + socket.getPort());
+				} catch (IOException io) {
+					io.printStackTrace();
+				}
+
+				// create a peer object to store this peer's data
+				/*
+				 * PeerInfo peer = new PeerInfo();
+				 * 
+				 * //the only data the peer sends to other peer for now is his email id
+				 * peer.setEmail(data); //get the peer's port number from socket
+				 * peer.setPort(socket.getPort()); peer.setSocket(socket); //Adding the peer to
+				 * the Arraylist peerList.add(peer);
+				 */
+				// System.out.println("The peer trying to connect is: "+ peer.getEmail() +" on
+				// the port: "+ socket.getPort());
 			} // end of while loop
 		} catch (IOException io) {
 			io.printStackTrace();

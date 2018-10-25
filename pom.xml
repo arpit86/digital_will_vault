@@ -52,6 +52,11 @@
     		<artifactId>spring-test</artifactId>
     		<version>${org.springframework-version}</version>
 		</dependency>
+		<dependency>
+        	<groupId>javax.validation</groupId>
+        	<artifactId>validation-api</artifactId>
+        	<version>1.0.0.GA</version>
+    	</dependency>
 		
 		<!-- MySQL database -->
 		<dependency>
@@ -59,6 +64,33 @@
 			<artifactId>mysql-connector-java</artifactId>
 			<version>8.0.12</version>
 		</dependency>
+		<dependency>
+        	<groupId>org.hibernate</groupId>
+        	<artifactId>hibernate-core</artifactId>
+        	<version>4.0.1.Final</version>
+    	</dependency>
+    	<dependency>
+        	<groupId>org.hibernate</groupId>
+        	<artifactId>hibernate-validator</artifactId>
+        	<version>4.2.0.Final</version>
+    	</dependency>
+    	<dependency>
+        	<groupId>org.hibernate.common</groupId>
+        	<artifactId>hibernate-commons-annotations</artifactId>
+       	 	<version>4.0.1.Final</version>
+        	<classifier>tests</classifier>
+    	</dependency>
+     
+    	<dependency>
+        	<groupId>org.hibernate.javax.persistence</groupId>
+        	<artifactId>hibernate-jpa-2.0-api</artifactId>
+        	<version>1.0.1.Final</version>
+    	</dependency>
+    	<dependency>
+        	<groupId>org.hibernate</groupId>
+        	<artifactId>hibernate-entitymanager</artifactId>
+        	<version>4.0.1.Final</version>
+    	</dependency>
 		
 		<!-- Inject -->
 		<dependency>
@@ -84,6 +116,12 @@
 			<artifactId>jstl</artifactId>
 			<version>${jstl.version}</version>
 		</dependency>
+		<dependency>
+        	<groupId>taglibs</groupId>
+        	<artifactId>standard</artifactId>
+        	<version>1.1.2</version>
+        	<scope>runtime</scope>
+    	</dependency>
         
         
         <!-- Email dependency -->
