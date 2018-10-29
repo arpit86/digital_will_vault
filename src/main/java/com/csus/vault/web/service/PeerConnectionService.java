@@ -1,8 +1,11 @@
 package com.csus.vault.web.service;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -11,21 +14,22 @@ import java.util.ArrayList;
 
 import com.csus.vault.web.block.BlockStructure;
 import com.csus.vault.web.block.PeerInfo;
+import com.csus.vault.web.block.Transaction;
 
 public class PeerConnectionService extends Thread{
 	
 	public static final int BOOT_PORT = 2999;
+	public static final int TX_COUNT_TRESHOLD = 2;
 	private ArrayList <PeerInfo> peerList;
 	private String email = "";
 	private Integer port;
-	private BlockStructure block;
 	private PrintWriter outWriter; 
 	private BufferedReader inReader;
+	private Boolean isMiner = false;
 	PeerInfo peerInfo;
 	 
 	public PeerConnectionService(String email, BlockStructure blockInfo){
     	this.email = email;
-    	this.block = blockInfo;
     	this.peerList = new ArrayList<PeerInfo>();
     	
     	// Establish a connection with boot node server on port 2999
@@ -98,7 +102,6 @@ public class PeerConnectionService extends Thread{
 	@SuppressWarnings("resource")
 	public void run() {
 		try {
-
 			for (PeerInfo p : peerList) {
 				Socket peerSocket = new Socket("127.0.0.1", p.getPort());
 				outWriter = new PrintWriter(peerSocket.getOutputStream(), true);
@@ -113,7 +116,7 @@ public class PeerConnectionService extends Thread{
 
 			// keep listening for incoming connections
 			while (true) {
-				System.out.println(email + " Server listening for connections on port: " + port);
+				System.out.println(email + " Server listening for connection on port: " + port);
 				// accept is a blocking call meaning that code won't execute further until a
 				// peer connects to server
 				Socket socket = serverSocket.accept();
@@ -137,6 +140,73 @@ public class PeerConnectionService extends Thread{
 					// Adding the peer to the Arraylist
 					peerList.add(peer);
 					System.out.println("Connected to " + peer.getEmail() + " on port " + socket.getPort());
+					
+					//Run a thread for each connected peer to handle transactions and blocks messages
+					new Thread("" + peerList.indexOf(peer)) {
+						public void run() {
+							BufferedReader dataReader;
+							ArrayList <Transaction> Txpool = new ArrayList<Transaction>();
+							PrintWriter blockWriter;
+							// keep listening for incoming connections
+							while (true) {
+								if(isMiner)
+								{
+									System.out.println("Listening for incoming transactions from peer " + getName());
+								}
+								else
+								{
+									System.out.println("Listening for incoming transactions or blocks from peer" + getName());
+								}
+
+								try {
+									dataReader = new BufferedReader(new InputStreamReader(peerList.get(Integer.parseInt(getName())).getSocket().getInputStream()));
+									String data = "";
+									data = dataReader.readLine();
+									if(data.equals("transaction"))
+									{
+										System.out.println("Transaction received from peer " + getName());
+										//Not sure if using a different input stream reader after using one stream reader will work
+										ObjectInputStream Txreader = new ObjectInputStream(new BufferedInputStream(peerList.get(Integer.parseInt(getName())).getSocket().getInputStream()));
+										Transaction t = (Transaction) Txreader.readObject();
+										Txpool.add(t);
+										System.out.println("Added transaction to pool");
+										if(isMiner)
+										{
+											if(Txpool.size()==TX_COUNT_TRESHOLD)
+											{
+												BlockStructure minedBlock = null;
+												
+												//Add mining logic here. Transactions are stored in transaction pool "Txpool".
+												//After creating the block, update local blockchain copy.
+												
+												//broadcast the block to all peers.
+												for (PeerInfo p : peerList) {
+													Socket peerSocket = p.getSocket();
+													blockWriter = new PrintWriter(peerSocket.getOutputStream(), true);
+													blockWriter.println("block");
+													ObjectOutputStream blockDataWriter = new ObjectOutputStream(peerSocket.getOutputStream());
+													blockDataWriter.writeObject(minedBlock);
+													
+												}
+												//delete transactions from pool
+												Txpool.clear();
+											}											
+										}
+									} else if(data.equals("block"))
+									{
+										System.out.println("Block received from peer " + getName());
+										//Not sure if using a different input stream reader after using one stream reader will work
+										ObjectInputStream Blockreader = new ObjectInputStream(peerList.get(Integer.parseInt(getName())).getSocket().getInputStream());
+										BlockStructure b = (BlockStructure) Blockreader.readObject();
+										//Verify block here with the local transaction pool "Txpool". if valid add block to local blockchain and delete those transactions from pool.
+									}
+								} catch (IOException | ClassNotFoundException io) {
+									io.printStackTrace();
+								}
+							}
+							
+						}
+					}.start();
 				} catch (IOException io) {
 					io.printStackTrace();
 				}
