@@ -1,13 +1,26 @@
 package com.csus.vault.web.service;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.security.KeyFactory;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import com.csus.vault.web.dao.UserDaoOperation;
 import com.csus.vault.web.model.VaultUser;
@@ -50,14 +63,37 @@ public class UserService {
 		
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(512);
-        user.setUser_publicKey(keyGen.genKeyPair().getPublic().getEncoded());
+        byte[] publicKey = keyGen.genKeyPair().getPublic().getEncoded();
+        byte[] privateKey = keyGen.genKeyPair().getPrivate().getEncoded();
+        user.setUser_publicKey(publicKey);
         
         //Send an email to user with private key to the user email
         emailService = new EmailService();
-        emailService.sendEmailContainingThePrivateKey(keyGen.genKeyPair().getPrivate().getEncoded(), user.getUserEmail());
+        emailService.sendEmailContainingThePrivateKey(privateKey, user.getUserEmail());
         
         System.out.println("Public key is saved in database and the Private key is emailed to user.");
+        // The public-private key is saved to KeyPair folder
+        writeToFile("KeyPair/publicKey_" + user.getUserEmail(), publicKey);
+        writeToFile("KeyPair/privateKey_" + user.getUserEmail(), privateKey);
 	}
+	
+	private void writeToFile(String path, byte[] key) {
+		try {
+			File f = new File(path);
+			f.getParentFile().mkdirs();
+			FileOutputStream fos;
+			fos = new FileOutputStream(f);
+			fos.write(key);
+	        fos.flush();
+	        fos.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        
+	}
+
 	
 	/*
 	 *  This function generates a hash value of the password by applying the random generated salt.
@@ -115,4 +151,33 @@ public class UserService {
 			e.printStackTrace();
 		}
 	}
+	
+	public PrivateKey getPrivate(String filename, String algorithm) throws Exception {
+        byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+        KeyFactory kf = KeyFactory.getInstance(algorithm);
+        return kf.generatePrivate(spec);
+    }
+
+    public PublicKey getPublic(String filename, String algorithm) throws Exception {
+        byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+        KeyFactory kf = KeyFactory.getInstance(algorithm);
+        return kf.generatePublic(spec);
+    }
+    
+    public SecretKeySpec getSecretKey(String filename, String algorithm) throws IOException{
+        byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
+        return new SecretKeySpec(keyBytes, algorithm);
+    }
+    
+    public void GenerateSymmetricKey(int length, String algorithm) 
+            throws UnsupportedEncodingException, NoSuchAlgorithmException, NoSuchPaddingException {
+    	SecretKeySpec secretKey;
+            SecureRandom rnd = new SecureRandom();
+            byte [] key = new byte [16];
+            rnd.nextBytes(key);
+            secretKey = new SecretKeySpec(key, "AES");
+            writeToFile("OneKey/secretKey_", secretKey.getEncoded());
+    }
 }

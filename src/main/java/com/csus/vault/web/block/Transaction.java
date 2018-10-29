@@ -6,7 +6,7 @@ public class Transaction {
 	
 	private String transactionType;
 	private long vault_userId;
-	private byte[] publicKey;
+	private byte[] publicKeyOrWillHash;
 	private long willId;
 	private Date transactionTS;
 	
@@ -34,12 +34,12 @@ public class Transaction {
 		this.transactionTS = transactionTS;
 	}
 
-	public byte[] getPublicKey() {
-		return publicKey;
+	public byte[] getPublicKeyOrWillHash() {
+		return publicKeyOrWillHash;
 	}
 
-	public void setPublicKey(byte[] publicKey) {
-		this.publicKey = publicKey;
+	public void setPublicKeyOrWillHash(byte[] publicKeyOrWillHash) {
+		this.publicKeyOrWillHash = publicKeyOrWillHash;
 	}
 
 	public long getWillId() {

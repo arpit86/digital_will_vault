@@ -29,7 +29,7 @@ public class BlockManagerService {
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
 		trans.setTransactionType(TRANSACTION_TYPE_PUBLIC_KEY_UPLOAD);
-		trans.setPublicKey(user.getUser_publicKey());
+		trans.setPublicKeyOrWillHash(user.getUser_publicKey());
 		trans.setVault_userId(user.getUserId());
 		trans.setWillId(0);
 		generateBlock(trans);		
@@ -44,7 +44,7 @@ public class BlockManagerService {
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
 		trans.setTransactionType(TRANSACTION_TYPE_WILL_UPLOAD);
-		trans.setPublicKey(new byte[0]);
+		trans.setPublicKeyOrWillHash(new byte[0]);
 		trans.setVault_userId(will.getVault_userId());
 		trans.setWillId(will.getWillId());
 		generateBlock(trans);		
@@ -59,7 +59,7 @@ public class BlockManagerService {
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
 		trans.setTransactionType(TRANSACTION_TYPE_WILL_VIEW);
-		trans.setPublicKey(new byte[0]);
+		trans.setPublicKeyOrWillHash(new byte[0]);
 		trans.setVault_userId(will.getVault_userId());
 		trans.setWillId(will.getWillId());
 		generateBlock(trans);		
@@ -74,7 +74,7 @@ public class BlockManagerService {
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
 		trans.setTransactionType(TRANSACTION_TYPE_WILL_UPDATE);
-		trans.setPublicKey(new byte[0]);
+		trans.setPublicKeyOrWillHash(new byte[0]);
 		trans.setVault_userId(will.getVault_userId());
 		trans.setWillId(will.getWillId());
 		generateBlock(trans);		
