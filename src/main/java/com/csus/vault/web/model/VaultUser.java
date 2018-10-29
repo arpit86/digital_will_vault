@@ -17,7 +17,7 @@ public class VaultUser implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name="user_id", unique=true, nullable=false)
 	private int userId;
 
@@ -40,7 +40,7 @@ public class VaultUser implements Serializable {
 	private String userPassword;
 
 	@Column(name="user_phone")
-	private BigInteger userPhone;
+	private String userPhone;
 
 	@Column(length=2048)
 	private byte[] user_publicKey;
@@ -103,11 +103,11 @@ public class VaultUser implements Serializable {
 		this.userPassword = userPassword;
 	}
 
-	public BigInteger getUserPhone() {
+	public String getUserPhone() {
 		return this.userPhone;
 	}
 
-	public void setUserPhone(BigInteger userPhone) {
+	public void setUserPhone(String userPhone) {
 		this.userPhone = userPhone;
 	}
 

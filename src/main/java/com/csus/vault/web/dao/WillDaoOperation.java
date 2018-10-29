@@ -45,8 +45,8 @@ public class WillDaoOperation {
                 	authUser.setAuthorizedTS(new Date());
                 	authUser.setVault_userId(will.getVault_userId());
                 	authUser.setWillId(will.getWillId());
-                	authUser.setAuthorizedUpdate(true);
-                	authUser.setAuthorizedView(true);
+                	authUser.setAuthorizedUpdate("true");
+                	authUser.setAuthorizedView("true");
                 	manager.persist(authUser);
                 	blockService.createBlockWithWillUploadTransaction(willInfo);
                 }

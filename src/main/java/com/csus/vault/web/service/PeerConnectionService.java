@@ -10,7 +10,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import com.csus.vault.web.block.BlockStructure;
-import com.csus.vault.web.model.PeerInfo;
+import com.csus.vault.web.block.PeerInfo;
 
 public class PeerConnectionService extends Thread{
 	

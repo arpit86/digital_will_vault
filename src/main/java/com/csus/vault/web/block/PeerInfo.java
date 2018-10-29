@@ -1,4 +1,4 @@
-package com.csus.vault.web.model;
+package com.csus.vault.web.block;
 
 import java.net.Socket;
 
