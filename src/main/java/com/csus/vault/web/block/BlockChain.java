@@ -4,42 +4,42 @@ import java.util.ArrayList;
 
 public class BlockChain {
 	
-	private BlockStructureWithMultiple currentBlock;
-	private BlockStructureWithMultiple headBlock;
-	private ArrayList<BlockStructureWithMultiple> blockList;
+	private BlockStructure currentBlock;
+	private BlockStructure headBlock;
+	private ArrayList<BlockStructure> blockList;
 	
-	public BlockStructureWithMultiple getCurrentBlock() {
+	public BlockStructure getCurrentBlock() {
 		return currentBlock;
 	}
 
-	private void setCurrentBlock(BlockStructureWithMultiple currentBlock) {
+	private void setCurrentBlock(BlockStructure currentBlock) {
 		this.currentBlock = currentBlock;
 	}
 
-	public BlockStructureWithMultiple getHeadBlock() {
+	public BlockStructure getHeadBlock() {
 		return headBlock;
 	}
 
-	private void setHeadBlock(BlockStructureWithMultiple headBlock) {
+	private void setHeadBlock(BlockStructure headBlock) {
 		this.headBlock = headBlock;
 	}
 
-	public ArrayList<BlockStructureWithMultiple> getBlockList() {
+	public ArrayList<BlockStructure> getBlockList() {
 		return blockList;
 	}
 	
 	// Constructor
 	public BlockChain() {
-		blockList = new ArrayList<BlockStructureWithMultiple>();
+		blockList = new ArrayList<BlockStructure>();
 	}
 
-	public void acceptIncomingBlock(BlockStructureWithMultiple blockStructure) {
+	public void acceptIncomingBlock(BlockStructure blockStructure) {
 		//Check whether this is the first block or Genesis block
 		if(headBlock == null) {
-			headBlock = blockStructure;
+			setHeadBlock(blockStructure);
 			headBlock.setPreviousHash(null);
 		}
-		currentBlock = blockStructure;
+		setCurrentBlock(blockStructure);
 		blockList.add(blockStructure);
 	}
 	

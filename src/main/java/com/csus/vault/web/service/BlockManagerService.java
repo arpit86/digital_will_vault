@@ -5,7 +5,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.csus.vault.web.block.BlockStructure;
+import com.csus.vault.web.block.BlockStructureWithSingleTrans;
 import com.csus.vault.web.block.Transaction;
 import com.csus.vault.web.model.VaultUser;
 import com.csus.vault.web.model.VaultWillDetail;
@@ -85,7 +85,7 @@ public class BlockManagerService {
 	 */
 	private void generateBlock(Transaction transaction) {
 		System.out.println("BlockManagerService:generateBlock:: Create a block for the transaction:" + transaction.getTransactionType());
-		BlockStructure block = new BlockStructure();
+		BlockStructureWithSingleTrans block = new BlockStructureWithSingleTrans();
 		block.setTimeStamp(new Timestamp(System.currentTimeMillis()));
 		block.setTransaction(transaction);
 		block.setUserId(transaction.getVault_userId());
@@ -107,7 +107,7 @@ public class BlockManagerService {
 		//Broadcast this block to the Peer.
 	}
 	
-	private String mineBlock(BlockStructure willBlock) {
+	private String mineBlock(BlockStructureWithSingleTrans willBlock) {
 		System.out.println("BlockManagerService:mineBlock:: Mining block for Proof of Work consensus.");
 		String minedHash = new String(new char[DIFFICULTY]).replace('\0', 'a');
 		String prevHash = willBlock.getPreviousHash();
