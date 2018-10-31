@@ -6,6 +6,7 @@ import javax.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.csus.vault.web.model.VaultAuthorizedUser;
 import com.csus.vault.web.model.VaultUser;
 
 @Repository
@@ -17,28 +18,32 @@ public class UserDaoOperation {
 	
 	/*
 	 *  This function checks whether a user exists in the database.
-	 *  @return isValid = true: if user not present
-	 *  				  false: if user exists
+	 *  @return isPresent = new: if user not present
+	 *  				    authorizeUser: if user exists but does not have a password
+	 *  					exist: if user is present in database
 	 */
-	public boolean verify(VaultUser user) {
-		boolean isValid = false;
+	public String verify(VaultUser user) {
+		String isPresent = "";
 		if (null != manager && null != user) {
 			System.out.println("UserDaoOperation:verify:: inside verify()");
             try {
                 VaultUser userElement = manager.find(VaultUser.class, user.getUserEmail());
                 if(null != userElement && userElement.getUserEmail().equalsIgnoreCase(user.getUserEmail())){
                 	System.out.println("UserDaoOperation:verify:: user already present in database.");
-                    isValid = false;
+                	isPresent = "exist";
+                	if(userElement.getUserPassword().isEmpty()) {
+                		System.out.println("UserDaoOperation:verify:: user already present in database but is an authorized user");
+                		isPresent="authorizeUser";
+                	}
                 } else {
                 	System.out.println("UserDaoOperation:verify:: user does not exist in database.");
-                	isValid = true;
+                	isPresent = "new";
                 }
             } catch (Exception ex) {
             	System.out.println("UserDaoOperation:verify:: Exeption: " + ex.getMessage());
-            	throw(ex);
             }
 		}
-	    return isValid;
+	    return isPresent;
 	}
 	
 	/*
@@ -52,7 +57,6 @@ public class UserDaoOperation {
 				System.out.println("UserDaoOperation:register:: saved user: " + user.getUserEmail());
 			} catch (Exception ex) {
             	System.out.println("UserDaoOperation:register:: Unable to register the User Record: Exception: "+ ex.getMessage());
-            	throw(ex);
             }
 		}
 	}
@@ -68,10 +72,39 @@ public class UserDaoOperation {
                 user = manager.find(VaultUser.class, userEmail);
             } catch (Exception ex) {
             	System.out.println("UserDaoOperation:getUserDetailByEmail:: Exeption: " + ex.getMessage());
-            	throw(ex);
             }
 		}
 		return user;
+	}
+
+	/*
+	 *  This function updates the user attributes if modified.
+	 */
+	public void update(VaultUser user) {
+		if(manager != null && user != null) {
+			System.out.println("UserDaoOperation:register:: inside register()");
+			try {
+				VaultUser userElement = manager.find(VaultUser.class, user.getUserEmail());
+				if(userElement != null && userElement.getUserEmail().equalsIgnoreCase(user.getUserEmail()))
+					userElement = manager.merge(user);
+				System.out.println("UserDaoOperation:update:: updated user: " + user.getUserEmail());
+			} catch (Exception ex) {
+            	System.out.println("UserDaoOperation:update:: Unable to update the User Record: Exception: "+ ex.getMessage());
+            }
+		}
+	}
+
+	public void saveAuthorizedUser(VaultAuthorizedUser authUser) {
+		if(manager != null && authUser != null) {
+			System.out.println("UserDaoOperation:register:: inside register()");
+			try {
+				manager.persist(authUser);
+				System.out.println("UserDaoOperation:saveAuthorizedUser:: saved authorized user: " + authUser.getVault_userId());
+			} catch (Exception ex) {
+            	System.out.println("UserDaoOperation:saveAuthorizedUser:: Unable to save the User Record: Exception: "+ ex.getMessage());
+            }
+		}
+		
 	}
 
 }

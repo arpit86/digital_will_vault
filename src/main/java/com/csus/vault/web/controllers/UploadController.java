@@ -53,11 +53,9 @@ public class UploadController {
 	public ModelAndView saveAuthorizedUsers(HttpSession session, HttpServletResponse response,
 	  @RequestParam("authorizedUserList") ArrayList<VaultUser> authorizedUserList) {
 		ModelAndView mv = new ModelAndView("mainPage");
-		//VaultUser user = (VaultUser) session.getAttribute("user");
 		VaultWillDetail will = (VaultWillDetail) session.getAttribute("will");
 		willService = new WillManagerService();
 		willService.addAuthorizedWillUser(authorizedUserList, will);
-		System.out.println("File uploaded: ");
 		return mv;
 	}
 

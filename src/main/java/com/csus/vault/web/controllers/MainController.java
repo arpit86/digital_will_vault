@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.csus.vault.web.model.VaultUser;
+import com.csus.vault.web.model.VaultWillDetail;
 import com.csus.vault.web.service.WillManagerService;
 
 @Controller("mainController")
@@ -25,6 +26,28 @@ public class MainController {
 	@RequestMapping(value = "/mainPage", method = RequestMethod.GET)
 	public String home(Locale locale, Model model) {
 		return "mainPage";
+	}
+	
+	@RequestMapping(value = "/modifyWill", method = RequestMethod.GET)
+	public ModelAndView viewUploadedWill(HttpSession session, HttpServletResponse response) {
+		VaultUser user = (VaultUser) session.getAttribute("user");
+		VaultWillDetail will = (VaultWillDetail) session.getAttribute("will");
+		if(user.getUserId() == will.getVault_userId()) {
+			willService = new WillManagerService();
+			byte[] decryptedData = willService.decryptWillDataWithPrivateKey(will.getWillContent(), user.getUserEmail());
+			return new ModelAndView("displayWill", "fileContent", decryptedData);
+		}
+			return new ModelAndView("notAuthorized");
+	}
+	
+	@RequestMapping(value = "/modifyWill", method = RequestMethod.POST)
+	public ModelAndView saveAuthorizedUsers(HttpSession session, HttpServletResponse response,
+			 @RequestParam("file") MultipartFile privateKeyFile) {
+		ModelAndView mv = new ModelAndView("mainPage");		
+		willService = new WillManagerService();
+		//willService.addAuthorizedWillUser(authorizedUserList);
+		System.out.println("File uploaded: ");
+		return mv;
 	}
 	
 	@RequestMapping(value = "/viewWill", method = RequestMethod.GET)
@@ -50,7 +73,7 @@ public class MainController {
 		VaultUser user = (VaultUser) session.getAttribute("user");
 		if (!privateKey.isEmpty()) {
 			willService = new WillManagerService();
-			String willData = willService.retrieveWillData(privateKey, user);
+			String willData = willService.retrieveWillData(user);
 		} else {
 			mv = new ModelAndView("requestKey");
 		}
@@ -73,18 +96,5 @@ public class MainController {
 		return mv;
 	}
 	
-	@RequestMapping(value = "/modifyWill", method = RequestMethod.GET)
-	public ModelAndView viewAuthorizeUsers(Model model, HttpServletResponse response) {
-		return new ModelAndView("authorizeUserView", "authorizedUserList", new ArrayList<VaultUser>());
-	}
 	
-	@RequestMapping(value = "/modifyWill", method = RequestMethod.POST)
-	public ModelAndView saveAuthorizedUsers(HttpSession session, HttpServletResponse response,
-			 @RequestParam("file") MultipartFile privateKeyFile) {
-		ModelAndView mv = new ModelAndView("mainPage");		
-		willService = new WillManagerService();
-		//willService.addAuthorizedWillUser(authorizedUserList);
-		System.out.println("File uploaded: ");
-		return mv;
-	}
 }

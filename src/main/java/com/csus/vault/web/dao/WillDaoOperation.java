@@ -32,7 +32,7 @@ public class WillDaoOperation {
 	 *  This function will save the encrypted will to the database and
 	 *  add user to vault_authorized_user table with update and view rights for the will.
 	 */
-	public void saveEncryptedWillToDB(byte[] encryptedData, VaultUser user) {
+	public void saveEncryptedWillToDB(byte[] encryptedData, VaultUser user, String willHash) {
 		if(manager != null && encryptedData != null) {
 			System.out.println("WillDaoOperation:saveEncryptedWillToDB:: inside saveEncryptedWillToDB()");
 						
@@ -42,10 +42,11 @@ public class WillDaoOperation {
 				will.setWill_createdTS(new Date());
 				will.setWill_updatedTS(new Date());
 				will.setWillContent(encryptedData);
-				VaultAuthorizedUser authUser = new VaultAuthorizedUser();
+				will.setWillHash(willHash);
 				manager.persist(will);
 				System.out.println("WillDaoOperation:saveEncryptedWillToDB:: saved will: " + user.getUserEmail());
-				VaultWillDetail willInfo = getWillDetailbyUserId(user.getUserId());
+				VaultAuthorizedUser authUser = new VaultAuthorizedUser();
+				VaultWillDetail willInfo = getWillDetailbyUserId(will.getVault_userId());
 				if(null != willInfo) {
                 	authUser.setAuthorizedTS(new Date());
                 	authUser.setVault_userId(will.getVault_userId());

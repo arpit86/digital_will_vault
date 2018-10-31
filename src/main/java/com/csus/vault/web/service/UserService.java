@@ -23,7 +23,9 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.csus.vault.web.dao.UserDaoOperation;
+import com.csus.vault.web.model.VaultAuthorizedUser;
 import com.csus.vault.web.model.VaultUser;
+import com.csus.vault.web.model.VaultWillDetail;
 
 public class UserService {
 	
@@ -38,6 +40,9 @@ public class UserService {
 		peer = PeerConnectionService.getInstance();
 	}
 
+	/*
+	 *  Register a new user
+	 */
 	public void register(VaultUser user) {
 		try {
 			userDao = new UserDaoOperation();
@@ -54,11 +59,31 @@ public class UserService {
 		}
 	}
 	
-	public boolean verify(VaultUser user) {
+	/*
+	 *  Register a new authorized user
+	 */
+	public void registerAuthorizeUser(VaultUser user) {
+		userDao = new UserDaoOperation();
+		generatePasswordHashAndSalt(user);
+		userDao.update(user);
+		peer.connectToBootNode(user.getUserEmail());
+		//start the server listening thread
+		peer.start();
+		blockService = new BlockManagerService();
+		blockService.createBlockWithPublicKeyTransaction(user, peer);
+	}
+	
+	/*
+	 *  This function checks whether a user exists in the database.
+	 */
+	public String verify(VaultUser user) {
 		userDao = new UserDaoOperation();
 		return userDao.verify(user);
 	}
 	
+	/*
+	 *  This function retrieves the user detail for the given email id.
+	 */
 	public VaultUser getUserDetailByEmail(String userEmail) {
 		userDao = new UserDaoOperation();
 		return userDao.getUserDetailByEmail(userEmail);
@@ -67,7 +92,7 @@ public class UserService {
 	/*
 	 *  This function generate private-public key pair using RSA algorithm.
 	 */
-	private void generateKeyPair(VaultUser user) throws NoSuchAlgorithmException {
+	public void generateKeyPair(VaultUser user) throws NoSuchAlgorithmException {
 		
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(512);
@@ -80,11 +105,14 @@ public class UserService {
         emailService.sendEmailContainingThePrivateKey(privateKey, user.getUserEmail());
         
         System.out.println("Public key is saved in database and the Private key is emailed to user.");
-        // The public-private key is saved to KeyPair folder
+        // The public-private key is saved to KeyPair folder: <keyType>_<userEmail>
         writeToFile("KeyPair/publicKey_" + user.getUserEmail(), publicKey);
         writeToFile("KeyPair/privateKey_" + user.getUserEmail(), privateKey);
 	}
 	
+	/*
+	 *  Thie function writes the byte[] data to the file path provided.
+	 */
 	private void writeToFile(String path, byte[] key) {
 		try {
 			File f = new File(path);
@@ -144,38 +172,40 @@ public class UserService {
 		}	
 	    return true;
 	}
-	
-	public void registerAuthorizeUser(VaultUser user) {
+
+	public void generateKeyPairForAuthorizedUser(VaultUser user, VaultWillDetail will) {
 		try {
-			userDao = new UserDaoOperation();
-			generateKeyPair(user);
-			userDao.register(user);
+			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+			keyGen.initialize(512);
+			byte[] publicKey = keyGen.genKeyPair().getPublic().getEncoded();
+			byte[] privateKey = keyGen.genKeyPair().getPrivate().getEncoded();
+			user.setUser_publicKey(publicKey);
+
+			// Send an email to user with private key to the user email
 			emailService = new EmailService();
-			emailService.sendEmailAuthorizeUserToRegister(user.getUserEmail());
-			peer.connectToBootNode(user.getUserEmail());
-			//start the server listening thread
-			peer.start();
-			blockService = new BlockManagerService();
-			blockService.createBlockWithPublicKeyTransaction(user, peer);
+			emailService.sendEmailAuthorizeUserToRegister(privateKey, user.getUserEmail(), will);
+
+			System.out.println("Public key is saved in database and the Private key is emailed to user.");
+			// The public-private key is saved to KeyPair folder: <keyType>_<userEmail>
+			writeToFile("KeyPair/publicKey_" + user.getUserEmail(), publicKey);
+			writeToFile("KeyPair/privateKey_" + user.getUserEmail(), privateKey);
 		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	public PrivateKey getPrivate(String filename, String algorithm) throws Exception {
-        byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
-        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
-        KeyFactory kf = KeyFactory.getInstance(algorithm);
-        return kf.generatePrivate(spec);
-    }
+	public void saveAuthorizeUserToUserTbl(VaultUser user) {
+		userDao = new UserDaoOperation();
+		userDao.register(user);
+	}
+	
+	public void saveAuthorizeUserToAuthTbl(VaultAuthorizedUser authUser) {
+		userDao = new UserDaoOperation();
+		userDao.saveAuthorizedUser(authUser);
+	}
 
-    public PublicKey getPublic(String filename, String algorithm) throws Exception {
-        byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
-        KeyFactory kf = KeyFactory.getInstance(algorithm);
-        return kf.generatePublic(spec);
-    }
-    
+	
     public SecretKeySpec getSecretKey(String filename, String algorithm) throws IOException{
         byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
         return new SecretKeySpec(keyBytes, algorithm);
@@ -190,4 +220,7 @@ public class UserService {
             secretKey = new SecretKeySpec(key, "AES");
             writeToFile("OneKey/secretKey_", secretKey.getEncoded());
     }
+
+	
+	
 }

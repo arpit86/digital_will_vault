@@ -30,6 +30,9 @@ public class VaultWillDetail implements Serializable {
 
 	@Temporal(TemporalType.DATE)
 	private Date will_updatedTS;
+	
+	@Column(name="will_hash")
+	private String willHash;
 
 	public VaultWillDetail() {
 	}
@@ -70,4 +73,11 @@ public class VaultWillDetail implements Serializable {
 		this.will_updatedTS = will_updatedTS;
 	}
 
+	public String getWillHash() {
+		return willHash;
+	}
+
+	public void setWillHash(String willHash) {
+		this.willHash = willHash;
+	}
 }

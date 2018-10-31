@@ -20,7 +20,14 @@
 			</tr>
 		</table>
 		<br/>
-		<t3>If you wish to view a new Will, please select the link below</t3>
+		<t3>If you wish to modify the lastest Will, please select the link below</t3>
+		<table>
+			<tr>
+				<td align="center"><a href="modifyWill">Modify Existing Will</a></td>
+			</tr>
+		</table>
+		<br/>
+		<t3>If you wish to view the last uploaded Will, please select the link below</t3>
 		<table>
 			<tr>
 				<td align="center"><a href="viewWill">View Existing Will</a></td>
