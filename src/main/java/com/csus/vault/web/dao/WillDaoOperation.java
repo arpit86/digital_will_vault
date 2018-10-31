@@ -12,6 +12,7 @@ import com.csus.vault.web.model.VaultAuthorizedUser;
 import com.csus.vault.web.model.VaultUser;
 import com.csus.vault.web.model.VaultWillDetail;
 import com.csus.vault.web.service.BlockManagerService;
+import com.csus.vault.web.service.PeerConnectionService;
 
 @Repository
 @Transactional
@@ -21,7 +22,11 @@ public class WillDaoOperation {
 	private EntityManager manager;
 	
 	private BlockManagerService blockService = null;
+	private PeerConnectionService peer = null;
 	
+	public WillDaoOperation() {
+		peer = PeerConnectionService.getInstance();
+	}
 
 	/*
 	 *  This function will save the encrypted will to the database and
@@ -48,7 +53,7 @@ public class WillDaoOperation {
                 	authUser.setAuthorizedUpdate("true");
                 	authUser.setAuthorizedView("true");
                 	manager.persist(authUser);
-                	blockService.createBlockWithWillUploadTransaction(willInfo);
+                	blockService.createBlockWithWillUploadTransaction(willInfo, peer);
                 }
 			} catch (Exception ex) {
             	System.out.println("WillDaoOperation:saveEncryptedWillToDB:: Unable to save the Will Record: Exception: "+ ex.getMessage());

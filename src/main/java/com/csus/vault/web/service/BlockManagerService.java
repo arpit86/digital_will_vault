@@ -24,7 +24,7 @@ public class BlockManagerService {
 	 *  When a new user is created a private-public key is generated.  The private key is with the user
 	 *  and the public key is available publicly to send will owner view request.
 	 */
-	public void createBlockWithPublicKeyTransaction(VaultUser user) {
+	public void createBlockWithPublicKeyTransaction(VaultUser user, PeerConnectionService peer) {
 		System.out.println("BlockManagerService:createBlockWithPublicKeyTransaction:: Inside the function.");
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
@@ -32,14 +32,14 @@ public class BlockManagerService {
 		trans.setPublicKeyOrWillHash(user.getUser_publicKey());
 		trans.setVault_userId(user.getUserId());
 		trans.setWillId(0);
-		generateBlock(trans);		
+		peer.sendToAll(trans);		
 	}
 	
 	/*
 	 *  This function creates a block with single transaction of type: Will Upload
 	 *  When a user/owner uploads a digital will, the will is encrypted and uploaded to the database.
 	 */
-	public void createBlockWithWillUploadTransaction(VaultWillDetail will) {
+	public void createBlockWithWillUploadTransaction(VaultWillDetail will, PeerConnectionService peer) {
 		System.out.println("BlockManagerService:createBlockWithWillUploadTransaction:: Inside the function.");
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
@@ -47,7 +47,7 @@ public class BlockManagerService {
 		trans.setPublicKeyOrWillHash(new byte[0]);
 		trans.setVault_userId(will.getVault_userId());
 		trans.setWillId(will.getWillId());
-		generateBlock(trans);		
+		peer.sendToAll(trans);	
 	}
 	
 	/*

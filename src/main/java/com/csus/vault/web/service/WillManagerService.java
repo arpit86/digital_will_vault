@@ -27,7 +27,7 @@ import com.csus.vault.web.model.VaultWillDetail;
 public class WillManagerService {
 	
 	private WillDaoOperation willDao = null;
-
+		
 	public void upload(MultipartFile file, VaultUser user) {
 		try {
 			byte[] bytes = file.getBytes();

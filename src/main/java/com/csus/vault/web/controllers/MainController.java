@@ -52,7 +52,6 @@ public class MainController {
 			willService = new WillManagerService();
 			String willData = willService.retrieveWillData(privateKey, user);
 		} else {
-			String error = null;
 			mv = new ModelAndView("requestKey");
 		}
 		return mv;

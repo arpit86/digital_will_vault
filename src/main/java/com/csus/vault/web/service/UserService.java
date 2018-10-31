@@ -32,6 +32,11 @@ public class UserService {
 	private EmailService emailService = null;
 	private final int ITERATIONS = 1000;
 	private final int KEY_LENGTH = 128;
+	private PeerConnectionService peer;
+	
+	public UserService() {
+		peer = PeerConnectionService.getInstance();
+	}
 
 	public void register(VaultUser user) {
 		try {
@@ -39,8 +44,11 @@ public class UserService {
 			generateKeyPair(user);
 			generatePasswordHashAndSalt(user);
 			userDao.register(user);
+			peer.connectToBootNode(user.getUserEmail());
+			//start the server listening thread
+			peer.start();
 			blockService = new BlockManagerService();
-			blockService.createBlockWithPublicKeyTransaction(user);
+			blockService.createBlockWithPublicKeyTransaction(user,peer);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
@@ -91,7 +99,6 @@ public class UserService {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-        
 	}
 
 	
@@ -143,10 +150,13 @@ public class UserService {
 			userDao = new UserDaoOperation();
 			generateKeyPair(user);
 			userDao.register(user);
-			blockService = new BlockManagerService();
-			blockService.createBlockWithPublicKeyTransaction(user);
 			emailService = new EmailService();
 			emailService.sendEmailAuthorizeUserToRegister(user.getUserEmail());
+			peer.connectToBootNode(user.getUserEmail());
+			//start the server listening thread
+			peer.start();
+			blockService = new BlockManagerService();
+			blockService.createBlockWithPublicKeyTransaction(user, peer);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
