@@ -2,7 +2,6 @@ package com.csus.vault.web.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -10,7 +9,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
@@ -23,7 +21,6 @@ import javax.crypto.NoSuchPaddingException;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.csus.vault.web.dao.UserDaoOperation;
 import com.csus.vault.web.dao.WillDaoOperation;
 import com.csus.vault.web.model.VaultAuthorizedUser;
 import com.csus.vault.web.model.VaultUser;
@@ -49,32 +46,20 @@ public class WillManagerService {
 		}
 	}
 	
-	
-	/*
-	 *  This function will encrypt the uploaded will text with user's public key.
-	 */
-	private byte[] encryptUploadedWillWithPubKey(byte[] willData, String userEmail) {
-		
-		byte[] encryptData = null;
-		
+	public void uploadUpdatedWill(MultipartFile updateWillFile, VaultUser user) {
 		try {
-			Cipher encrypt = Cipher.getInstance("RSA");
-			encrypt.init(Cipher.ENCRYPT_MODE, getPublic(userEmail));
-			encryptData = encrypt.doFinal(willData);
-		} catch (InvalidKeyException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: InvalidKeyException: " + ex.getMessage());
-		} catch (NoSuchAlgorithmException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: NoSuchAlgorithmException: " + ex.getMessage());
-		} catch (NoSuchPaddingException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: NoSuchPaddingException: " + ex.getMessage());
-		} catch (IllegalBlockSizeException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: IllegalBlockSizeException: " + ex.getMessage());
-		} catch (BadPaddingException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: BadPaddingException: " + ex.getMessage());
-		} catch (Exception ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: Exception: " + ex.getMessage());
-		} 
-		return encryptData;
+			byte[] bytes = updateWillFile.getBytes();
+			
+			// Encrypting the file data with user's Public key
+			byte[] encryptedData = encryptUploadedWillWithPubKey(bytes, user.getUserEmail());
+			String willHash = applySha256ToEncryptedWill(encryptedData.toString());
+			
+			// Saving the encrypted will to database
+			willDao = new WillDaoOperation();
+			willDao.saveModifiedWillToDB(encryptedData, user, willHash);
+		} catch(IOException io) {
+			System.out.println("WillManagerService:uploadUpdatedWill:: IOExeption: " + io.getMessage());
+		}
 	}
 	
 	/*
@@ -96,6 +81,32 @@ public class WillManagerService {
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(spec);
     }
+	
+	
+	/*
+	 *  This function will encrypt the uploaded will text with user's public key.
+	 */
+	private byte[] encryptUploadedWillWithPubKey(byte[] willData, String userEmail) {
+		byte[] encryptData = null;
+		try {
+			Cipher encrypt = Cipher.getInstance("RSA");
+			encrypt.init(Cipher.ENCRYPT_MODE, getPublic(userEmail));
+			encryptData = encrypt.doFinal(willData);
+		} catch (InvalidKeyException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: InvalidKeyException: " + ex.getMessage());
+		} catch (NoSuchAlgorithmException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: NoSuchAlgorithmException: " + ex.getMessage());
+		} catch (NoSuchPaddingException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: NoSuchPaddingException: " + ex.getMessage());
+		} catch (IllegalBlockSizeException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: IllegalBlockSizeException: " + ex.getMessage());
+		} catch (BadPaddingException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: BadPaddingException: " + ex.getMessage());
+		} catch (Exception ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: Exception: " + ex.getMessage());
+		} 
+		return encryptData;
+	}
 	
 	public byte[] decryptWillDataWithPrivateKey(byte[] encryptData, String userEmail) {
 		byte[] originalData = null;
@@ -163,17 +174,16 @@ public class WillManagerService {
 			authUser.setWillId(will.getWillId());
 			userService.saveAuthorizeUserToAuthTbl(authUser);
 		}
-		
 	}
 
 
-	public boolean checkWillAuthorization(VaultUser user) {
+	/*public boolean checkWillAuthorization(VaultUser user) {
 		// TODO Auto-generated method stub
 		return false;
-	}
+	}*/
 
 
-	public String retrieveWillData(VaultUser user) {
+	/*public String retrieveWillData(VaultUser user) {
 		String originalWill = "";
 		try {
 			willDao = new WillDaoOperation();
@@ -183,11 +193,16 @@ public class WillManagerService {
 			System.out.println("WillManagerService:retrieveWillData:: IOException: " + io.getMessage());
 		}
 		return originalWill;
-	}
-
+	}*/
 
 	public VaultWillDetail getWillDetailbyUserId(VaultUser user) {
 		willDao = new WillDaoOperation();
 		return willDao.getWillDetailbyUserId(user.getUserId());
+	}
+
+	@SuppressWarnings("rawtypes")
+	public ArrayList getListOfWillWithViewAccess(VaultUser user) {
+		willDao = new WillDaoOperation();
+		return willDao.getListOfWillWithViewAccess(user);
 	}
 }

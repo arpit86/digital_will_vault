@@ -29,7 +29,7 @@ public class UploadController {
 	
 	@RequestMapping(value = "/uploadFile", method = RequestMethod.POST)
 	public ModelAndView saveUploadFile(HttpSession session, HttpServletResponse response,
-	  @RequestParam("file") MultipartFile file, @RequestParam("privKey") String privateKey) {
+	  @RequestParam("file") MultipartFile file) {
 		ModelAndView mv = new ModelAndView("authorizeUserView");
 		VaultUser user = (VaultUser) session.getAttribute("user");
 		if (!file.isEmpty()) {

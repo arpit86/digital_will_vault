@@ -1,9 +1,11 @@
 package com.csus.vault.web.dao;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.csus.vault.web.model.VaultAuthorizedUser;
 import com.csus.vault.web.model.VaultUser;
 import com.csus.vault.web.model.VaultWillDetail;
+import com.csus.vault.web.model.VaultWillDetailHistory;
 import com.csus.vault.web.service.BlockManagerService;
 import com.csus.vault.web.service.PeerConnectionService;
 
@@ -80,5 +83,51 @@ public class WillDaoOperation {
 			}
 		}
 		return willElement;
+	}
+
+	public void saveModifiedWillToDB(byte[] encryptedData, VaultUser user, String willHash) {
+		if(manager != null && encryptedData != null) {
+			System.out.println("WillDaoOperation:saveEncryptedWillToDB:: inside saveEncryptedWillToDB()");
+						
+			try {
+				VaultWillDetail willInfo = getWillDetailbyUserId(user.getUserId());
+				VaultWillDetailHistory histInfo = new VaultWillDetailHistory();
+				histInfo.setWillId(willInfo.getWillId());
+				histInfo.setVault_userId(willInfo.getVault_userId());
+				histInfo.setWill_createdTS(willInfo.getWill_createdTS());
+				histInfo.setWill_updatedTS(new Date());
+				histInfo.setWillContent(willInfo.getWillContent());
+				histInfo.setWillHash(willInfo.getWillHash());
+				manager.persist(histInfo);
+				willInfo.setWill_updatedTS(new Date());
+				willInfo.setWillContent(encryptedData);
+				willInfo.setWillHash(willHash);
+				manager.persist(willInfo);
+				System.out.println("WillDaoOperation:saveModifiedWillToDB:: saved will: " + user.getUserEmail());
+				blockService.createBlockWithWillUpdateTransaction(willInfo, peer);
+            } catch (Exception ex) {
+            	System.out.println("WillDaoOperation:saveModifiedWillToDB:: Unable to save the Will Record: Exception: "+ ex.getMessage());
+            	throw(ex);
+            }
+		
+		}
+	}
+
+	@SuppressWarnings("rawtypes")
+	public ArrayList getListOfWillWithViewAccess(VaultUser user) {
+		ArrayList willIdList = null;
+		if(manager != null) {
+			System.out.println("WillDaoOperation:getListOfWillWithViewAccess:: inside getListOfWillWithViewAccess()");
+			try {
+				Query query = manager.createNativeQuery("select willId from VaultAuthorizedUser where vault_userId = :vault_userId and authorizedView = :authorizedView");
+				query.setParameter("vault_userId", user.getUserId());
+				query.setParameter("authorizedView", "true");
+				willIdList = (ArrayList) query.getResultList();
+			} catch (Exception ex) {
+            	System.out.println("WillDaoOperation:getListOfWillWithViewAccess:: Exception: "+ ex.getMessage());
+            	throw(ex);
+            }
+		}
+		return willIdList;
 	}
 }
