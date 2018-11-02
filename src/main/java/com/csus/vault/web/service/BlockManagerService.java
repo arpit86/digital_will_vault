@@ -1,5 +1,6 @@
 package com.csus.vault.web.service;
 
+import java.nio.charset.Charset;
 import java.util.Date;
 
 import com.csus.vault.web.block.Transaction;
@@ -38,7 +39,7 @@ public class BlockManagerService {
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
 		trans.setTransactionType(TRANSACTION_TYPE_WILL_UPLOAD);
-		trans.setPublicKeyOrWillHash(new byte[0]);
+		trans.setPublicKeyOrWillHash(will.getWillHash().getBytes(Charset.forName("UTF-8")));
 		trans.setVault_userId(will.getVault_userId());
 		trans.setWillId(will.getWillId());
 		peer.sendToAll(trans);	
@@ -52,8 +53,8 @@ public class BlockManagerService {
 		System.out.println("BlockManagerService:createBlockWithWillUpdateTransaction:: Inside the function.");
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
-		trans.setTransactionType(TRANSACTION_TYPE_WILL_VIEW);
-		trans.setPublicKeyOrWillHash(new byte[0]);
+		trans.setTransactionType(TRANSACTION_TYPE_WILL_UPDATE);
+		trans.setPublicKeyOrWillHash(will.getWillHash().getBytes(Charset.forName("UTF-8")));
 		trans.setVault_userId(will.getVault_userId());
 		trans.setWillId(will.getWillId());
 		peer.sendToAll(trans);		
@@ -63,14 +64,14 @@ public class BlockManagerService {
 	 *  This function creates a block with single transaction of type: Will Viewed
 	 *  When an authorized user/owner views an existing digital will, the activity is captured and stored in database.
 	 */
-	public void createBlockWithWillViewedTransaction(VaultWillDetail will, PeerConnectionService peer) {
+	public void createBlockWithWillViewedTransaction(int willId, int userId, PeerConnectionService peer) {
 		System.out.println("BlockManagerService:createBlockWithWillViewedTransaction:: Inside the function.");
 		Transaction trans = new Transaction();
 		trans.setTransactionTS(new Date());
-		trans.setTransactionType(TRANSACTION_TYPE_WILL_UPDATE);
+		trans.setTransactionType(TRANSACTION_TYPE_WILL_VIEW);
 		trans.setPublicKeyOrWillHash(new byte[0]);
-		trans.setVault_userId(will.getVault_userId());
-		trans.setWillId(will.getWillId());
+		trans.setVault_userId(userId);
+		trans.setWillId(willId);
 		peer.sendToAll(trans);		
 	}
 }

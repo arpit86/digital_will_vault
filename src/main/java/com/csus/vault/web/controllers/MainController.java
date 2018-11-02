@@ -71,33 +71,15 @@ public class MainController {
 	
 	@RequestMapping(value = "/viewWill", method = RequestMethod.POST)
 	public ModelAndView getPrivateKey(HttpSession session, HttpServletResponse response,
-	  @RequestParam("file") MultipartFile privateKey) {
-		ModelAndView mv = new ModelAndView("authorizeUserView");
-		//VaultUser user = (VaultUser) session.getAttribute("user");
-		if (!privateKey.isEmpty()) {
+	  @RequestParam("willId") int willId) {
+		ModelAndView mv = new ModelAndView("viewWill");
+		VaultUser user = (VaultUser) session.getAttribute("user");
+		if (willId != 0) {
 			willService = new WillManagerService();
-			//String willData = willService.retrieveWillData(user);
+			willService.requestOwnerForWill(user, willId);
 		} else {
-			mv = new ModelAndView("requestKey");
+			mv = new ModelAndView("error", "error", "The Will ID selected is invalid.");
 		}
 		return mv;
 	}
-	
-	@RequestMapping(value = "/requestWillView", method = RequestMethod.GET)
-	public ModelAndView requestOwnerToViewWill(Model model, HttpServletResponse response) {
-		return new ModelAndView("authorizeUserView", "authorizedUserList", new ArrayList<VaultUser>());
-	}
-	
-	@RequestMapping(value = "/requestWillView", method = RequestMethod.POST)
-	public ModelAndView requestOwnerToViewWill(HttpSession session, HttpServletResponse response,
-	  @RequestParam("file") MultipartFile file, @RequestParam("privKey") String privateKey) {
-		ModelAndView mv = new ModelAndView("authorizeUserView");
-		
-		// Depending on the will selected send email to will owner requesting him to upload his priv key and allow authUser to view his will
-		// This will be encrypted by symmetric key and this key will be encrypted by auth user public key and he has to upload his private key to view the will.
-		mv = new ModelAndView("notAuthorized");
-		return mv;
-	}
-	
-	
 }

@@ -29,7 +29,14 @@ import com.csus.vault.web.model.VaultWillDetail;
 public class WillManagerService {
 	
 	private WillDaoOperation willDao = null;
-		
+	private BlockManagerService blockService = null;
+	private EmailService emailService =null;
+	private PeerConnectionService peer;
+	
+	public WillManagerService() {
+		peer = PeerConnectionService.getInstance();
+	}
+	
 	public void upload(MultipartFile file, VaultUser user) {
 		try {
 			byte[] bytes = file.getBytes();
@@ -176,25 +183,6 @@ public class WillManagerService {
 		}
 	}
 
-
-	/*public boolean checkWillAuthorization(VaultUser user) {
-		// TODO Auto-generated method stub
-		return false;
-	}*/
-
-
-	/*public String retrieveWillData(VaultUser user) {
-		String originalWill = "";
-		try {
-			willDao = new WillDaoOperation();
-			VaultWillDetail will = willDao.getWillDetailbyUserId(user.getUserId());
-			originalWill = new String(decryptWillDataWithPrivateKey(will.getWillContent(), privateKey.getBytes()), Charset.forName("UTF-8"));
-		} catch (IOException io) {
-			System.out.println("WillManagerService:retrieveWillData:: IOException: " + io.getMessage());
-		}
-		return originalWill;
-	}*/
-
 	public VaultWillDetail getWillDetailbyUserId(VaultUser user) {
 		willDao = new WillDaoOperation();
 		return willDao.getWillDetailbyUserId(user.getUserId());
@@ -204,5 +192,18 @@ public class WillManagerService {
 	public ArrayList getListOfWillWithViewAccess(VaultUser user) {
 		willDao = new WillDaoOperation();
 		return willDao.getListOfWillWithViewAccess(user);
+	}
+
+	public void requestOwnerForWill(VaultUser user, int willId) {
+		willDao = new WillDaoOperation();
+		String ownerEmail = willDao.requestOwnerForWill(user, willId);
+		
+		// Send an email to user with private key to the user email
+		emailService = new EmailService();
+		emailService.sendEmailToOwnerToSendWillContentToRequestor(ownerEmail, user, willId);
+		
+		blockService = new BlockManagerService();
+		blockService.createBlockWithWillViewedTransaction(willId, user.getUserId(), peer);
+		
 	}
 }

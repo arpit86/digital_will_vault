@@ -130,4 +130,39 @@ public class WillDaoOperation {
 		}
 		return willIdList;
 	}
+	
+	public VaultWillDetail getWillDetailbyWillId(int willId) {
+		VaultWillDetail willElement = null;	
+		if(manager != null) {
+			System.out.println("WillDaoOperation:getWillDetailbyWillId:: inside saveEncryptedWillToDB()");
+			
+			try {
+				willElement = manager.find(VaultWillDetail.class, willId);
+                if(null != willElement) {
+                	return willElement;
+                }
+			} catch (Exception ex) {
+				System.out.println("WillDaoOperation:getWillDetailbyWillId:: Unable to retrieve the Will Record: Exception: "+ ex.getMessage());
+				throw(ex);
+			}
+		}
+		return willElement;
+	}
+
+	public String requestOwnerForWill(VaultUser user, int willId) {
+		String ownerEmail = "";
+		if(manager != null) {
+			try {
+				VaultWillDetail willInfo = getWillDetailbyWillId(willId);
+				Query query = manager.createNativeQuery("select u from VaultUser u where u.vault_userId = :will_OwnerId");
+				query.setParameter("will_OwnerId", willInfo.getVault_userId());
+				VaultUser owner = (VaultUser) query.getSingleResult();
+				ownerEmail = owner.getUserEmail();
+			} catch (Exception ex) {
+            	System.out.println("WillDaoOperation:getListOfWillWithViewAccess:: Exception: "+ ex.getMessage());
+            	throw(ex);
+            }
+		}
+		return ownerEmail;
+	}
 }

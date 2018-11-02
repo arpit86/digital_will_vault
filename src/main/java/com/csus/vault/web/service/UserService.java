@@ -199,7 +199,6 @@ public class UserService {
 		userDao = new UserDaoOperation();
 		userDao.saveAuthorizedUser(authUser);
 	}
-
 	
     public SecretKeySpec getSecretKey(String filename, String algorithm) throws IOException{
         byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
@@ -215,7 +214,4 @@ public class UserService {
             secretKey = new SecretKeySpec(key, "AES");
             writeToFile("OneKey/secretKey_", secretKey.getEncoded());
     }
-
-	
-	
 }
