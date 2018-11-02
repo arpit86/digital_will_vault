@@ -92,7 +92,7 @@ public class WillDaoOperation {
 			try {
 				VaultWillDetail willInfo = getWillDetailbyUserId(user.getUserId());
 				VaultWillDetailHistory histInfo = new VaultWillDetailHistory();
-				histInfo.setWillId(willInfo.getWillId());
+				histInfo.setWill_id(willInfo.getWillId());
 				histInfo.setVault_userId(willInfo.getVault_userId());
 				histInfo.setWill_createdTS(willInfo.getWill_createdTS());
 				histInfo.setWill_updatedTS(new Date());

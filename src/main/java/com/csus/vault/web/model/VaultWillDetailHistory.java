@@ -20,7 +20,7 @@ public class VaultWillDetailHistory implements Serializable {
 	@Column(name="hist_will_id")
 	private int histWillId;
 	
-	private int willId;
+	private int will_id;
 
 	private int vault_userId;
 
@@ -42,12 +42,12 @@ public class VaultWillDetailHistory implements Serializable {
 		return histWillId;
 	}
 
-	public int getWillId() {
-		return willId;
+	public int getWill_id() {
+		return will_id;
 	}
 
-	public void setWillId(int willId) {
-		this.willId = willId;
+	public void setWill_id(int will_id) {
+		this.will_id = will_id;
 	}
 
 	public int getVault_userId() {
