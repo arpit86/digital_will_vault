@@ -7,17 +7,24 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import javax.persistence.EntityManagerFactory;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.csus.vault.web.model.VaultAuthorizedUser;
 import com.csus.vault.web.model.VaultUser;
 
+@Repository
 public class UserDaoOperation {
+	
+	@Autowired
+    EntityManagerFactory entityManagerFactory;
 	
 	private JdbcConnection jdbcConn = new JdbcConnection();
 	private Connection conn = null;
+	private EntityManager manager = null;
 	
 	/*
 	 *  This function checks whether a user exists in the database.
@@ -25,20 +32,24 @@ public class UserDaoOperation {
 	 *  				    authorizeUser: if user exists but does not have a password
 	 *  					exist: if user is present in database
 	 */
+	@Transactional(rollbackFor=Exception.class)
 	public String verify(VaultUser user) throws SQLException {
 		String isPresent = "";
-		conn = jdbcConn.getConnection();
-		if (null != conn && null != user) {
+		//conn = jdbcConn.getConnection();
+		if (null != entityManagerFactory && null != user) {
 			System.out.println("UserDaoOperation:verify:: inside verify()");
+			manager = entityManagerFactory.createEntityManager();
             try {
-            	PreparedStatement query = conn.prepareStatement("select * from vault_user where user_email = ?");
+            	/*PreparedStatement query = conn.prepareStatement("select * from vault_user where user_email = ?");
             	query.setString(1, user.getUserEmail());
-            	ResultSet rs = query.executeQuery();
-            	//VaultUser userElement = (VaultUser) query.executeQuery();
-                if(null != rs && rs.getString("user_email").equalsIgnoreCase(user.getUserEmail())){
+            	ResultSet rs = query.executeQuery();*/
+            	VaultUser userElement = manager.find(VaultUser.class, user.getUserEmail());
+            	if(null != userElement && userElement.getUserEmail().equalsIgnoreCase(user.getUserEmail())){
+            	//if(null != rs && rs.getString("user_email").equalsIgnoreCase(user.getUserEmail())){
                 	System.out.println("UserDaoOperation:verify:: user already present in database.");
                 	isPresent = "exist";
-                	if(rs.getString("user_password").isEmpty()) {
+                	//if(rs.getString("user_password").isEmpty()) {
+                	if(userElement.getUserPassword().isEmpty()) {
                 		System.out.println("UserDaoOperation:verify:: user already present in database but is an authorized user");
                 		isPresent="authorizeUser";
                 	}
@@ -48,8 +59,11 @@ public class UserDaoOperation {
                 }
             } catch (Exception ex) {
             	System.out.println("UserDaoOperation:verify:: Exeption: " + ex.getMessage());
+            	throw(ex);
             } finally {
-            	conn.close();
+            	//conn.close();
+            	if(manager != null)
+            		manager.close();
             }
 		}
 	    return isPresent;
@@ -58,12 +72,15 @@ public class UserDaoOperation {
 	/*
 	 * This function saves a new user to the database.
 	 */
+	@Transactional(rollbackFor=Exception.class)
 	public void register(VaultUser user) throws SQLException {
-		conn = jdbcConn.getConnection();
-		if(conn != null && user != null) {
+		//conn = jdbcConn.getConnection();
+		if(entityManagerFactory != null && user != null) {
 			System.out.println("UserDaoOperation:register:: inside register()");
+			manager = entityManagerFactory.createEntityManager();
 			try {
-				PreparedStatement query = conn.prepareStatement("insert into vault_user (user_id, user_firstName, user_lastName, " + 
+				manager.persist(user);
+				/*PreparedStatement query = conn.prepareStatement("insert into vault_user (user_id, user_firstName, user_lastName, " + 
 						"user_phone, user_password, password_salt, user_publicKey, user_createdTS, user_updatedTS, user_email) " + 
 						"VALUES (, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 				query.setString(2, user.getUser_firstName());
@@ -75,12 +92,15 @@ public class UserDaoOperation {
 				query.setDate(8, (Date) user.getUser_createdTS());
 				query.setDate(9, (Date) user.getUser_updatedTS());
 				query.setString(10, user.getUserEmail());
-				query.executeUpdate();
+				query.executeUpdate();*/
 				System.out.println("UserDaoOperation:register:: saved user: " + user.getUserEmail());
 			} catch (Exception ex) {
             	System.out.println("UserDaoOperation:register:: Unable to register the User Record: Exception: "+ ex.getMessage());
+            	throw(ex);
             } finally {
-            	conn.close();
+            	//conn.close();
+            	if(manager != null)
+            		manager.close();
             }
 		}
 	}

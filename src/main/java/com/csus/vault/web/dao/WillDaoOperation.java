@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.csus.vault.web.model.VaultAuthorizedUser;
@@ -17,12 +19,14 @@ import com.csus.vault.web.service.BlockManagerService;
 import com.csus.vault.web.service.PeerConnectionService;
 
 
-@Transactional
+@Repository
 public class WillDaoOperation {
 	
-	@PersistenceContext
-	private EntityManager manager;
 	
+	@Autowired
+    EntityManagerFactory entityManagerFactory;
+	
+	private EntityManager manager = null;
 	private BlockManagerService blockService = null;
 	private PeerConnectionService peer = null;
 	
@@ -34,8 +38,10 @@ public class WillDaoOperation {
 	 *  This function will save the encrypted will to the database and
 	 *  add user to vault_authorized_user table with update and view rights for the will.
 	 */
+	@Transactional(rollbackFor=Exception.class)
 	public void saveEncryptedWillToDB(byte[] encryptedData, VaultUser user, String willHash) {
-		if(manager != null && encryptedData != null) {
+		if(entityManagerFactory != null && encryptedData != null) {
+			manager = entityManagerFactory.createEntityManager();
 			System.out.println("WillDaoOperation:saveEncryptedWillToDB:: inside saveEncryptedWillToDB()");
 						
 			try {
@@ -61,14 +67,18 @@ public class WillDaoOperation {
 			} catch (Exception ex) {
             	System.out.println("WillDaoOperation:saveEncryptedWillToDB:: Unable to save the Will Record: Exception: "+ ex.getMessage());
             	throw(ex);
-            }
+            } finally {
+            	if(manager!= null)
+            		manager.close();
+			}
 		}
 	}
 
-
+	@Transactional(rollbackFor=Exception.class)
 	public VaultWillDetail getWillDetailbyUserId(int userId) {
 		VaultWillDetail willElement = null;	
-		if(manager != null) {
+		if(entityManagerFactory != null) {
+			manager = entityManagerFactory.createEntityManager();
 			System.out.println("WillDaoOperation:saveEncryptedWillToDB:: inside saveEncryptedWillToDB()");
 			
 			try {
@@ -79,15 +89,18 @@ public class WillDaoOperation {
 			} catch (Exception ex) {
 				System.out.println("WillDaoOperation:getWillDetailbyUserId:: Unable to retrieve the Will Record: Exception: "+ ex.getMessage());
 				throw(ex);
+			} finally {
+            	if(manager!= null)
+            		manager.close();
 			}
 		}
 		return willElement;
 	}
 
 	public void saveModifiedWillToDB(byte[] encryptedData, VaultUser user, String willHash) {
-		if(manager != null && encryptedData != null) {
+		if(entityManagerFactory != null && encryptedData != null) {
 			System.out.println("WillDaoOperation:saveEncryptedWillToDB:: inside saveEncryptedWillToDB()");
-						
+			manager = entityManagerFactory.createEntityManager();			
 			try {
 				VaultWillDetail willInfo = getWillDetailbyUserId(user.getUserId());
 				VaultWillDetailHistory histInfo = new VaultWillDetailHistory();
@@ -107,7 +120,10 @@ public class WillDaoOperation {
             } catch (Exception ex) {
             	System.out.println("WillDaoOperation:saveModifiedWillToDB:: Unable to save the Will Record: Exception: "+ ex.getMessage());
             	throw(ex);
-            }
+            } finally {
+            	if(manager!= null)
+            		manager.close();
+			}
 		
 		}
 	}
@@ -115,7 +131,8 @@ public class WillDaoOperation {
 	@SuppressWarnings("rawtypes")
 	public ArrayList getListOfWillWithViewAccess(VaultUser user) {
 		ArrayList willIdList = null;
-		if(manager != null) {
+		if(entityManagerFactory != null) {
+			manager = entityManagerFactory.createEntityManager();
 			System.out.println("WillDaoOperation:getListOfWillWithViewAccess:: inside getListOfWillWithViewAccess()");
 			try {
 				Query query = manager.createNativeQuery("select willId from VaultAuthorizedUser where vault_userId = :vault_userId and authorizedView = :authorizedView");
@@ -132,9 +149,9 @@ public class WillDaoOperation {
 	
 	public VaultWillDetail getWillDetailbyWillId(int willId) {
 		VaultWillDetail willElement = null;	
-		if(manager != null) {
+		if(entityManagerFactory != null) {
+			manager = entityManagerFactory.createEntityManager();
 			System.out.println("WillDaoOperation:getWillDetailbyWillId:: inside saveEncryptedWillToDB()");
-			
 			try {
 				willElement = manager.find(VaultWillDetail.class, willId);
                 if(null != willElement) {
@@ -143,6 +160,9 @@ public class WillDaoOperation {
 			} catch (Exception ex) {
 				System.out.println("WillDaoOperation:getWillDetailbyWillId:: Unable to retrieve the Will Record: Exception: "+ ex.getMessage());
 				throw(ex);
+			} finally {
+            	if(manager!= null)
+            		manager.close();
 			}
 		}
 		return willElement;
@@ -150,7 +170,8 @@ public class WillDaoOperation {
 
 	public String requestOwnerForWill(VaultUser user, int willId) {
 		String ownerEmail = "";
-		if(manager != null) {
+		if(entityManagerFactory != null) {
+			manager = entityManagerFactory.createEntityManager();
 			try {
 				VaultWillDetail willInfo = getWillDetailbyWillId(willId);
 				Query query = manager.createNativeQuery("select u from VaultUser u where u.vault_userId = :will_OwnerId");
@@ -160,7 +181,10 @@ public class WillDaoOperation {
 			} catch (Exception ex) {
             	System.out.println("WillDaoOperation:getListOfWillWithViewAccess:: Exception: "+ ex.getMessage());
             	throw(ex);
-            }
+            } finally {
+            	if(manager!= null)
+            		manager.close();
+			}
 		}
 		return ownerEmail;
 	}
