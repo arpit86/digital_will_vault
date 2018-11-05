@@ -1,6 +1,7 @@
 package com.csus.vault.web.controllers;
 
 import java.nio.charset.Charset;
+import java.sql.SQLException;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,7 +36,7 @@ public class HomeController {
 	
 	@RequestMapping(value = "/registerProcess", method = RequestMethod.POST)
 	public ModelAndView addUser(HttpServletRequest request, HttpServletResponse response,
-	  @ModelAttribute("user") VaultUser user) {
+	  @ModelAttribute("user") VaultUser user) throws SQLException {
 		
 		System.out.println("Register User: "+ user.getUser_firstName() +" "+ user.getUser_lastName());
 		ModelAndView mv = new ModelAndView("mainPage", "name", user.getUser_firstName() + " " + user.getUser_lastName());
@@ -62,7 +63,7 @@ public class HomeController {
 	
 	@RequestMapping(value = "/loginProcess", method = RequestMethod.POST)
 	public ModelAndView loginUser(HttpServletRequest request, HttpServletResponse response,
-	  @ModelAttribute("user") VaultUser user) {
+	  @ModelAttribute("user") VaultUser user) throws SQLException {
 		
 		ModelAndView mv = new ModelAndView("login");
 		System.out.println("Login User: "+ user.getUserEmail());

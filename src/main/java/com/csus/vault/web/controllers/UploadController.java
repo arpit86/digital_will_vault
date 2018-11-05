@@ -1,5 +1,6 @@
 package com.csus.vault.web.controllers;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletResponse;
@@ -51,7 +52,7 @@ public class UploadController {
 	
 	@RequestMapping(value = "/authorizeUserView", method = RequestMethod.POST)
 	public ModelAndView saveAuthorizedUsers(HttpSession session, HttpServletResponse response,
-	  @RequestParam("authorizedUserList") ArrayList<VaultUser> authorizedUserList) {
+	  @RequestParam("authorizedUserList") ArrayList<VaultUser> authorizedUserList) throws SQLException {
 		ModelAndView mv = new ModelAndView("mainPage");
 		VaultWillDetail will = (VaultWillDetail) session.getAttribute("will");
 		willService = new WillManagerService();

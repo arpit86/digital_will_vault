@@ -7,7 +7,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.csus.vault.web.model.VaultAuthorizedUser;
@@ -17,7 +16,7 @@ import com.csus.vault.web.model.VaultWillDetailHistory;
 import com.csus.vault.web.service.BlockManagerService;
 import com.csus.vault.web.service.PeerConnectionService;
 
-@Repository
+
 @Transactional
 public class WillDaoOperation {
 	

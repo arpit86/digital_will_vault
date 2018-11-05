@@ -11,6 +11,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -162,7 +163,7 @@ public class WillManagerService {
 		return hexDataValue.toString();
 	}
 
-	public void addAuthorizedWillUser(ArrayList<VaultUser> authorizedUserList, VaultWillDetail will) {
+	public void addAuthorizedWillUser(ArrayList<VaultUser> authorizedUserList, VaultWillDetail will) throws SQLException {
 		UserService userService = new UserService();
 		VaultAuthorizedUser authUser = null;
 		for(VaultUser u: authorizedUserList) {

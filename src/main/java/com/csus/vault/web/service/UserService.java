@@ -11,6 +11,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.sql.SQLException;
 
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKeyFactory;
@@ -51,13 +52,15 @@ public class UserService {
 			blockService.createBlockWithPublicKeyTransaction(user,peer);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
 	
 	/*
 	 *  Register a new authorized user
 	 */
-	public void registerAuthorizeUser(VaultUser user) {
+	public void registerAuthorizeUser(VaultUser user) throws SQLException {
 		userDao = new UserDaoOperation();
 		generatePasswordHashAndSalt(user);
 		userDao.update(user);
@@ -71,7 +74,7 @@ public class UserService {
 	/*
 	 *  This function checks whether a user exists in the database.
 	 */
-	public String verify(VaultUser user) {
+	public String verify(VaultUser user) throws SQLException {
 		userDao = new UserDaoOperation();
 		return userDao.verify(user);
 	}
@@ -79,7 +82,7 @@ public class UserService {
 	/*
 	 *  This function retrieves the user detail for the given email id.
 	 */
-	public VaultUser getUserDetailByEmail(String userEmail) {
+	public VaultUser getUserDetailByEmail(String userEmail) throws SQLException {
 		userDao = new UserDaoOperation();
 		return userDao.getUserDetailByEmail(userEmail);
 	}
@@ -190,12 +193,12 @@ public class UserService {
 		}
 	}
 	
-	public void saveAuthorizeUserToUserTbl(VaultUser user) {
+	public void saveAuthorizeUserToUserTbl(VaultUser user) throws SQLException {
 		userDao = new UserDaoOperation();
 		userDao.register(user);
 	}
 	
-	public void saveAuthorizeUserToAuthTbl(VaultAuthorizedUser authUser) {
+	public void saveAuthorizeUserToAuthTbl(VaultAuthorizedUser authUser) throws SQLException {
 		userDao = new UserDaoOperation();
 		userDao.saveAuthorizedUser(authUser);
 	}
