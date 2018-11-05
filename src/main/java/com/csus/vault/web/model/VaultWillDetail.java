@@ -40,6 +40,10 @@ public class VaultWillDetail implements Serializable {
 	public int getWillId() {
 		return this.willId;
 	}
+	
+	public void setWillId(int willId) {
+		this.willId = willId;
+	}
 
 	public int getVault_userId() {
 		return this.vault_userId;

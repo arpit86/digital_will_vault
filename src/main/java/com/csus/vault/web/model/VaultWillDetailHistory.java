@@ -41,6 +41,10 @@ public class VaultWillDetailHistory implements Serializable {
 	public int getHistWillId() {
 		return histWillId;
 	}
+	
+	public void setHistWillId(int histWillId) {
+		this.histWillId = histWillId;
+	}
 
 	public int getWill_id() {
 		return will_id;
