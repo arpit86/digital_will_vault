@@ -30,33 +30,4 @@
 		 <!-- setting maximum upload size -->
 		<beans:property name="maxUploadSize" value="100000" />
 	</beans:bean>
-    
-    <!-- Simple implementation of the standard JDBC DataSource interface,
-        configuring the plain old JDBC DriverManager via bean properties -->
-   	<beans:bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-      	<property name="driverClassName" value="com.mysql.jdbc.Driver" />
-      	<property name="url" value="jdbc:mysql://localhost:3306/digitalVaultdb" />
-      	<property name="username" value="shweta" />
-      	<property name="password" value="Shweta1601" />
-   	</beans:bean>
-	
-	<!-- This produces a container-managed EntityManagerFactory -->
-    <beans:bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
-      	<property name="dataSource" ref="dataSource" />
-      	<property name="packagesToScan" value="com.csus.vault.web.model" />
-      	<property name="jpaVendorAdapter">
-         	<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter" />
-      	</property>
-      	<property name="jpaProperties">
-         	<props>
-            	<prop key="hibernate.hbm2ddl.auto">update</prop>
-            	<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
-         	</props>
-      	</property>
-   	</beans:bean>
-   	
-   	<beans:bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
-      	<property name="entityManagerFactory" ref="entityManagerFactory" />
-   	</beans:bean>
-    <tx:annotation-driven />	
 </beans>

@@ -7,18 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Query;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.csus.vault.web.model.VaultAuthorizedUser;
 import com.csus.vault.web.model.VaultUser;
 import com.csus.vault.web.model.VaultWillDetail;
-import com.csus.vault.web.model.VaultWillDetailHistory;
 import com.csus.vault.web.service.BlockManagerService;
 import com.csus.vault.web.service.PeerConnectionService;
 
@@ -104,93 +94,114 @@ public class WillDaoOperation {
 		return willElement;
 	}
 
-	public void saveModifiedWillToDB(byte[] encryptedData, VaultUser user, String willHash) {
-		if(entityManagerFactory != null && encryptedData != null) {
+	public void saveModifiedWillToDB(byte[] encryptedData, VaultUser user, String willHash) throws SQLException {
+		conn = jdbcConn.getConnection();
+		if(conn != null && encryptedData != null) {
 			System.out.println("WillDaoOperation:saveEncryptedWillToDB:: inside saveEncryptedWillToDB()");
-			manager = entityManagerFactory.createEntityManager();			
 			try {
 				VaultWillDetail willInfo = getWillDetailbyUserId(user.getUserId());
-				VaultWillDetailHistory histInfo = new VaultWillDetailHistory();
-				histInfo.setWill_id(willInfo.getWillId());
-				histInfo.setVault_userId(willInfo.getVault_userId());
-				histInfo.setWill_createdTS(willInfo.getWill_createdTS());
-				histInfo.setWill_updatedTS(new Date());
-				histInfo.setWillContent(willInfo.getWillContent());
-				histInfo.setWillHash(willInfo.getWillHash());
-				manager.persist(histInfo);
-				willInfo.setWill_updatedTS(new Date());
-				willInfo.setWillContent(encryptedData);
-				willInfo.setWillHash(willHash);
-				manager.persist(willInfo);
+				PreparedStatement query = conn.prepareStatement("insert into vault_will_detail_history (will_id, vault_userId, will_createdTS, " + 
+						"will_updatedTS, will_content, will_hash) values (?, ?, ?, ?, ?, ?)");
+				query.setInt(1, willInfo.getWillId());
+				query.setInt(2, willInfo.getVault_userId());
+				query.setDate(3, (java.sql.Date) willInfo.getWill_createdTS());
+				query.setDate(4, (java.sql.Date) new Date());
+				query.setBytes(5, willInfo.getWillContent());
+				query.setString(6, willInfo.getWillHash());
+				query.executeUpdate();
+				conn.commit();
+				query.close();
+				query = conn.prepareStatement("update vault_will_detail SET will_updatedTS=?, will_content=?, will_hash=? where vault_userId=?");
+				query.setDate(1, (java.sql.Date) new Date());
+				query.setBytes(2, encryptedData);
+				query.setString(3, willHash);
+				query.setInt(4, user.getUserId());
+				query.executeUpdate();
+				conn.commit();
+				query.close();
 				System.out.println("WillDaoOperation:saveModifiedWillToDB:: saved will: " + user.getUserEmail());
+				willInfo.setWillHash(willHash);
+				willInfo.setWillContent(encryptedData);
+				willInfo.setWill_updatedTS(new Date());
 				blockService.createBlockWithWillUpdateTransaction(willInfo, peer);
             } catch (Exception ex) {
             	System.out.println("WillDaoOperation:saveModifiedWillToDB:: Unable to save the Will Record: Exception: "+ ex.getMessage());
-            	throw(ex);
             } finally {
-            	if(manager!= null)
-            		manager.close();
+            	conn.close();
 			}
 		
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
-	public ArrayList getListOfWillWithViewAccess(VaultUser user) {
-		ArrayList willIdList = null;
-		if(entityManagerFactory != null) {
-			manager = entityManagerFactory.createEntityManager();
+	public ArrayList<Integer> getListOfWillWithViewAccess(VaultUser user) throws SQLException {
+		ArrayList<Integer> willIdList = new ArrayList<>();
+		conn = jdbcConn.getConnection();
+		if(conn != null) {
 			System.out.println("WillDaoOperation:getListOfWillWithViewAccess:: inside getListOfWillWithViewAccess()");
 			try {
-				Query query = manager.createNativeQuery("select willId from VaultAuthorizedUser where vault_userId = :vault_userId and authorizedView = :authorizedView");
-				query.setParameter("vault_userId", user.getUserId());
-				query.setParameter("authorizedView", "true");
-				willIdList = (ArrayList) query.getResultList();
+				PreparedStatement query = conn.prepareStatement("select will_id from vault_authorized_user where vault_userId=? and authorized_view=?");
+				query.setInt(1, user.getUserId());
+				query.setString(2, "true");
+				ResultSet rs = query.executeQuery();
+				while(rs.next()) {
+					willIdList.add(rs.getInt("will_id"));
+				}
+				query.close();
 			} catch (Exception ex) {
             	System.out.println("WillDaoOperation:getListOfWillWithViewAccess:: Exception: "+ ex.getMessage());
             	throw(ex);
-            }
+            } finally {
+            	conn.close();
+			}
 		}
 		return willIdList;
 	}
 	
-	public VaultWillDetail getWillDetailbyWillId(int willId) {
-		VaultWillDetail willElement = null;	
-		if(entityManagerFactory != null) {
-			manager = entityManagerFactory.createEntityManager();
+	public VaultWillDetail getWillDetailbyWillId(int willId) throws SQLException {
+		VaultWillDetail willElement = new VaultWillDetail();;
+		conn = jdbcConn.getConnection();
+		if(conn != null) {
 			System.out.println("WillDaoOperation:getWillDetailbyWillId:: inside saveEncryptedWillToDB()");
 			try {
-				willElement = manager.find(VaultWillDetail.class, willId);
-                if(null != willElement) {
-                	return willElement;
-                }
-			} catch (Exception ex) {
+				PreparedStatement query = conn.prepareStatement("select * from vault_will_detail where will_id=?");
+				query.setInt(1, willId);
+				ResultSet rs = query.executeQuery();
+				while(rs.next()) {
+					willElement = new VaultWillDetail();
+            		willElement.setWillId(willId);
+            		willElement.setVault_userId(rs.getInt("vault_userId"));
+            		willElement.setWill_createdTS(rs.getDate("will_createdTS"));
+            		willElement.setWill_updatedTS(rs.getDate("will_updatedTS"));
+            		willElement.setWillContent(rs.getBytes("will_content"));
+            		willElement.setWillHash(rs.getString("will_hash"));
+				}
+				query.close();
+           } catch (Exception ex) {
 				System.out.println("WillDaoOperation:getWillDetailbyWillId:: Unable to retrieve the Will Record: Exception: "+ ex.getMessage());
-				throw(ex);
 			} finally {
-            	if(manager!= null)
-            		manager.close();
+            	conn.close();
 			}
 		}
 		return willElement;
 	}
 
-	public String requestOwnerForWill(VaultUser user, int willId) {
+	public String requestOwnerForWill(VaultUser user, int willId) throws SQLException {
 		String ownerEmail = "";
-		if(entityManagerFactory != null) {
-			manager = entityManagerFactory.createEntityManager();
+		conn = jdbcConn.getConnection();
+		if(conn != null) {
 			try {
 				VaultWillDetail willInfo = getWillDetailbyWillId(willId);
-				Query query = manager.createNativeQuery("select u from VaultUser u where u.vault_userId = :will_OwnerId");
-				query.setParameter("will_OwnerId", willInfo.getVault_userId());
-				VaultUser owner = (VaultUser) query.getSingleResult();
-				ownerEmail = owner.getUserEmail();
+				PreparedStatement query = conn.prepareStatement("select * from vault_user where vault_userId=?");
+				query.setInt(1, willInfo.getVault_userId());
+				ResultSet rs = query.executeQuery();
+				while(rs.next()) {
+					ownerEmail = rs.getString("user_email");
+				}
+				query.close();
 			} catch (Exception ex) {
             	System.out.println("WillDaoOperation:getListOfWillWithViewAccess:: Exception: "+ ex.getMessage());
-            	throw(ex);
             } finally {
-            	if(manager!= null)
-            		manager.close();
+            	conn.close();
 			}
 		}
 		return ownerEmail;

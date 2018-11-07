@@ -51,6 +51,8 @@ public class WillManagerService {
 			willDao.saveEncryptedWillToDB(encryptedData, user, willHash);
 		} catch(IOException io) {
 			System.out.println("WillManagerService:upload:: Exeption: " + io.getMessage());
+		} catch (SQLException ex) {
+			System.out.println("WillManagerService:upload:: SQLExeption: " + ex.getMessage());
 		}
 	}
 	
@@ -67,6 +69,8 @@ public class WillManagerService {
 			willDao.saveModifiedWillToDB(encryptedData, user, willHash);
 		} catch(IOException io) {
 			System.out.println("WillManagerService:uploadUpdatedWill:: IOExeption: " + io.getMessage());
+		} catch (SQLException ex) {
+			System.out.println("WillManagerService:uploadUpdatedWill:: SQLExeption: " + ex.getMessage());
 		}
 	}
 	
@@ -185,26 +189,40 @@ public class WillManagerService {
 	}
 
 	public VaultWillDetail getWillDetailbyUserId(VaultUser user) {
-		willDao = new WillDaoOperation();
-		return willDao.getWillDetailbyUserId(user.getUserId());
+		VaultWillDetail willDetail = null;
+		try {
+			willDao = new WillDaoOperation();
+			willDetail = willDao.getWillDetailbyUserId(user.getUserId());
+		} catch (SQLException e) {
+			System.out.println("BlockManagerService:getWillDetailbyUserId:: SQLExeption: " + e.getMessage());
+		}
+		return willDetail;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public ArrayList getListOfWillWithViewAccess(VaultUser user) {
-		willDao = new WillDaoOperation();
-		return willDao.getListOfWillWithViewAccess(user);
+	public ArrayList<Integer> getListOfWillWithViewAccess(VaultUser user) {
+		ArrayList<Integer> willList = new ArrayList<Integer>();
+		try {
+			willDao = new WillDaoOperation();
+			willList = willDao.getListOfWillWithViewAccess(user);
+		} catch (SQLException e) {
+			System.out.println("BlockManagerService:getListOfWillWithViewAccess:: SQLExeption: " + e.getMessage());
+		}	
+		return willList;
 	}
 
 	public void requestOwnerForWill(VaultUser user, int willId) {
 		willDao = new WillDaoOperation();
-		String ownerEmail = willDao.requestOwnerForWill(user, willId);
-		
-		// Send an email to user with private key to the user email
-		emailService = new EmailService();
-		emailService.sendEmailToOwnerToSendWillContentToRequestor(ownerEmail, user, willId);
-		
-		blockService = new BlockManagerService();
-		blockService.createBlockWithWillViewedTransaction(willId, user.getUserId(), peer);
-		
+		try {
+			String ownerEmail = willDao.requestOwnerForWill(user, willId);
+			
+			// Send an email to user with private key to the user email
+			emailService = new EmailService();
+			emailService.sendEmailToOwnerToSendWillContentToRequestor(ownerEmail, user, willId);
+			
+			blockService = new BlockManagerService();
+			blockService.createBlockWithWillViewedTransaction(willId, user.getUserId(), peer);
+		} catch (SQLException e) {
+			System.out.println("BlockManagerService:requestOwnerForWill:: SQLExeption: " + e.getMessage());
+		}
 	}
 }

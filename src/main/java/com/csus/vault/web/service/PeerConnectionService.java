@@ -42,13 +42,10 @@ public class PeerConnectionService extends Thread {
 		return peer;
     }
 
-	/**
-	 * singleton instance created when class is loaded.
-	 */
 	private static PeerConnectionService peer = new PeerConnectionService();
 
 	/**
-	 * private constructor, prevents direct instantiation of this class.
+	 *  This constructor avoids direct instantiation.
 	 */
 	private PeerConnectionService() {}
 
@@ -124,13 +121,6 @@ public class PeerConnectionService extends Thread {
 		}
 	}
 
-	/*
-	 * public static void main(String[] args) throws IOException{ //PeerClient.jar
-	 * <email id> <block>. This is how peer client should be called by the GUI
-	 * PeerClient peer = new PeerClient(args[0], args[1]); //start the server
-	 * listening thread peer.run(); }
-	 */
-
 	public void run() {
 		try {
 			for (PeerInfo p : peerList) {
@@ -142,8 +132,7 @@ public class PeerConnectionService extends Thread {
 				StartMessageHandlerThread(peerList.indexOf(p));
 			}
 
-			// Start server socket for listening at same port used for connection to boot
-			// node
+			// Start server socket for listening at same port used for connection to boot node
 			ServerSocket serverSocket = new ServerSocket(port);
 
 			// keep listening for incoming connections
@@ -176,32 +165,19 @@ public class PeerConnectionService extends Thread {
 					peerList.add(peer);
 					System.out.println("Connected to " + peer.getEmail() + " on port " + socket.getPort());
 
-					// Run a thread for each connected peer to handle transactions and block
-					// messages
+					// Run a thread for each connected peer to handle transactions and block messages
 					StartMessageHandlerThread(peerList.indexOf(peer));
 				} catch (IOException io) {
-					io.printStackTrace();
+					System.out.println("PeerConnectionService:run:: IOException: "+ io.getMessage());
 				}
-
-				// create a peer object to store this peer's data
-				/*
-				 * PeerInfo peer = new PeerInfo();
-				 * 
-				 * //the only data the peer sends to other peer for now is his email id
-				 * peer.setEmail(data); //get the peer's port number from socket
-				 * peer.setPort(socket.getPort()); peer.setSocket(socket); //Adding the peer to
-				 * the Arraylist peerList.add(peer);
-				 */
-				// System.out.println("The peer trying to connect is: "+ peer.getEmail() +" on
-				// the port: "+ socket.getPort());
 			} // end of while loop
 		} catch (IOException io) {
-			io.printStackTrace();
+			System.out.println("PeerConnectionService:run:: IOException: "+ io.getMessage());
 		}
 	}
 
 	private String mineBlock(BlockStructure blockInfo) {
-		System.out.println("BlockManagerService:mineBlock:: Mining block for Proof of Work consensus.");
+		System.out.println("PeerConnectionService:mineBlock:: Mining block for Proof of Work consensus.");
 		String minedHash = new String(new char[DIFFICULTY]).replace('\0', 'a');
 		blockInfo.setHash(calculateHashWithMultiple(blockInfo));
 		String blockHash = blockInfo.getHash();
@@ -241,7 +217,7 @@ public class PeerConnectionService extends Thread {
 				hexDataValue.append(hex);
 			}
 		} catch (Exception e) {
-			System.out.println("BlockManagerService:applySha256ToBlockData:: Exeption: " + e.getMessage());
+			System.out.println("PeerConnectionService:applySha256ToBlockData:: Exeption: " + e.getMessage());
 		}
 		return hexDataValue.toString();
 	}
@@ -278,8 +254,7 @@ public class PeerConnectionService extends Thread {
 			}
 			block.setMerkleTree(new MerkleTree(transactionHashList));
 		} else {
-			System.out.println(
-					"BlockManagerService:buildMerkleTree:: Number of transactions is not 4: " + transactionList.size());
+			System.out.println("PeerConnectionService:buildMerkleTree:: Number of transactions is not 4: " + transactionList.size());
 		}
 	}
 
@@ -304,8 +279,7 @@ public class PeerConnectionService extends Thread {
 						data = dataReader.readLine();
 						if (data.equals("transaction")) {
 							System.out.println("Transaction received from peer " + getName());
-							// Not sure if using a different input stream reader after using one stream
-							// reader will work
+							// Not sure if using a different input stream reader after using one stream reader will work
 							ObjectInputStream transactionReader = new ObjectInputStream(new BufferedInputStream(
 									peerList.get(Integer.parseInt(getName())).getSocket().getInputStream()));
 							Transaction transaction = (Transaction) transactionReader.readObject();
@@ -358,7 +332,6 @@ public class PeerConnectionService extends Thread {
 						io.printStackTrace();
 					}
 				}
-
 			}
 		}.start();
 	}
