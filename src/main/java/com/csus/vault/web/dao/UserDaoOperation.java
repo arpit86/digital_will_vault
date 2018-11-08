@@ -1,7 +1,6 @@
 package com.csus.vault.web.dao;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,18 +29,20 @@ public class UserDaoOperation {
             	PreparedStatement query = conn.prepareStatement("select * from vault_user where user_email = ?");
             	query.setString(1, user.getUserEmail());
             	ResultSet rs = query.executeQuery();
-            	while(rs.next()) {
-	            	if(rs.getString("user_email").equalsIgnoreCase(user.getUserEmail())){
-	                	System.out.println("UserDaoOperation:verify:: user already present in database.");
-	                	isPresent = "exist";
-	                	if(rs.getString("user_password").isEmpty()) {
-	                		System.out.println("UserDaoOperation:verify:: user already present in database but is an authorized user");
-	                		isPresent="authorizeUser";
-	                	}
-	                } else {
-	                	System.out.println("UserDaoOperation:verify:: user does not exist in database.");
-	                	isPresent = "new";
+            	if(rs.getFetchSize() == 0) {
+            		while(rs.next()) {
+            			if(rs.getString("user_email").equalsIgnoreCase(user.getUserEmail())){
+            				System.out.println("UserDaoOperation:verify:: user already present in database.");
+            				isPresent = "exist";
+            				if(rs.getString("user_password").isEmpty()) {
+            					System.out.println("UserDaoOperation:verify:: user already present in database but is an authorized user");
+            					isPresent="authorizeUser";
+            				}
+            			} 
 	                }
+            	} else {
+                	System.out.println("UserDaoOperation:verify:: user does not exist in database.");
+                	isPresent = "new";
             	}
             	query.close();
             } catch (Exception ex) {
@@ -64,20 +65,17 @@ public class UserDaoOperation {
 			try {
 				PreparedStatement query = conn.prepareStatement("insert into vault_user (user_firstName, user_lastName, " + 
 						"user_phone, user_password, password_salt, user_publicKey, user_createdTS, user_updatedTS, user_email) " + 
-						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+						"VALUES (?, ?, ?, ?, ?, ?, now(), now(), ?)");
 				query.setString(1, user.getUser_firstName());
 				query.setString(2, user.getUser_lastName());
 				query.setString(3, user.getUserPhone());
 				query.setString(4, user.getUserPassword());
 				query.setString(5, user.getPasswordSalt());
 				query.setBytes(6, user.getUser_publicKey());
-				query.setDate(7, (Date) user.getUser_createdTS());
-				query.setDate(8, (Date) user.getUser_updatedTS());
-				query.setString(9, user.getUserEmail());
+				query.setString(7, user.getUserEmail());
 				query.executeUpdate();
 				System.out.println("UserDaoOperation:register:: saved user: " + user.getUserEmail());
 				conn.commit();
-				query.close();
 			} catch (Exception ex) {
             	System.out.println("UserDaoOperation:register:: Unable to register the User Record: Exception: "+ ex.getMessage());
             	conn.rollback();
@@ -130,12 +128,11 @@ public class UserDaoOperation {
 		if(conn != null && user != null) {
 			System.out.println("UserDaoOperation:register:: inside register()");
 			try {
-				PreparedStatement query = conn.prepareStatement("update vault_user SET user_password=?, password_salt=?, user_updatedTS=? "+
+				PreparedStatement query = conn.prepareStatement("update vault_user SET user_password=?, password_salt=?, user_updatedTS=now() "+
 						"WHERE user_email=?");
 				query.setString(1, user.getUserPassword());
 				query.setString(2, user.getPasswordSalt());
-				query.setDate(3, (Date) user.getUser_updatedTS());
-				query.setString(4, user.getUserEmail());
+				query.setString(3, user.getUserEmail());
 				query.executeUpdate();
 				conn.commit();
 				System.out.println("UserDaoOperation:update:: updated user: " + user.getUserEmail());
@@ -155,12 +152,11 @@ public class UserDaoOperation {
 			System.out.println("UserDaoOperation:register:: inside register()");
 			try {
 				PreparedStatement query = conn.prepareStatement("insert into VaultAuthorizedUser (willId, vault_userId, " + 
-						"authorizedTS, authorizedView, authorizedUpdate) VALUES (?, ?, ?, ?, ?)");
+						"authorizedTS, authorizedView, authorizedUpdate) VALUES (?, ?, now(), ?, ?)");
 				query.setInt(1, authUser.getWillId());
 				query.setInt(2, authUser.getVault_userId());
-				query.setDate(3, (Date) authUser.getAuthorizedTS());
-				query.setString(4, authUser.getAuthorizedView());
-				query.setString(5, authUser.getAuthorizedUpdate());
+				query.setString(3, authUser.getAuthorizedView());
+				query.setString(4, authUser.getAuthorizedUpdate());
 				query.executeUpdate();
 				System.out.println("UserDaoOperation:saveAuthorizedUser:: saved authorized user: " + authUser.getVault_userId());
 				conn.commit();

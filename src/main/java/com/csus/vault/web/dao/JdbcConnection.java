@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class JdbcConnection {
 	
 	// JDBC driver name and database URL
-	public final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
+	public final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";  
 	public final String DB_URL = "jdbc:mysql://localhost:3306/digitalVaultdb";
 
    // Database credentials
