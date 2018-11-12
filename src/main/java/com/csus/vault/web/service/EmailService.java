@@ -25,13 +25,11 @@ public class EmailService {
 	private Session getSession() {
 		Properties property = new Properties();
 		property.put("mail.smtp.host", "smtp.gmail.com");
-		property.put("mail.smtp.socketFactory.port", "465");
-		property.put("mail.smtp.socketFactory.class",
-				"javax.net.ssl.SSLSocketFactory");
 		property.put("mail.smtp.auth", "true");
-		property.put("mail.smtp.port", "465");
+		property.put("mail.smtp.port", "587");
+		property.put("mail.smtp.starttls.enable", "true");
 		
-		Session session = Session.getDefaultInstance(property, new javax.mail.Authenticator() {
+		Session session = Session.getInstance(property, new javax.mail.Authenticator() {
 							protected PasswordAuthentication getPasswordAuthentication() {
 									return new PasswordAuthentication("s.shweta.87@gmail.com","1601Anniversary");
 							}
@@ -72,7 +70,9 @@ public class EmailService {
 			message.setContent(multipart);
 
 			// Send message
-			Transport.send(message);
+			Transport trans = session.getTransport("smtp");
+            trans.connect("smtp.gmail.com", 587, "s.shweta.87@gmail.com", "1601Anniversary");
+			Transport.send(message, message.getAllRecipients());
 			System.out.println("The email sent was:\n" + message.toString());
 		} catch (MessagingException mex) {
 			mex.printStackTrace();

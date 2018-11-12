@@ -16,6 +16,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.csus.vault.web.model.VaultUser;
 import com.csus.vault.web.model.VaultWillDetail;
+import com.csus.vault.web.service.PeerConnectionService;
 import com.csus.vault.web.service.WillManagerService;;
 
 @Controller
@@ -33,9 +34,11 @@ public class UploadController {
 	  @RequestParam("file") MultipartFile file) {
 		ModelAndView mv = new ModelAndView("authorizeUserView");
 		VaultUser user = (VaultUser) session.getAttribute("user");
+		PeerConnectionService peer = (PeerConnectionService) session.getAttribute("peer");
 		if (!file.isEmpty()) {
 			willService = new WillManagerService();
-			willService.upload(file, user);
+			willService.generateSecretKey(user.getUserEmail());
+			willService.upload(file, user, peer);
 			VaultWillDetail will = willService.getWillDetailbyUserId(user);
 			session.setAttribute("will", will);
 		} else {
@@ -47,10 +50,11 @@ public class UploadController {
 	
 	@RequestMapping(value = "/authorizeUserView", method = RequestMethod.GET)
 	public ModelAndView viewAuthorizeUsers(Model model, HttpServletResponse response) {
-		return new ModelAndView("authorizeUserView", "authorizedUserList", new ArrayList<VaultUser>());
+		model.addAttribute("authorizedUserList", new ArrayList<VaultUser>());
+		return new ModelAndView("authorizeUserView");
 	}
 	
-	@RequestMapping(value = "/authorizeUserView", method = RequestMethod.POST)
+	@RequestMapping(value = "/authorizeUserProcess", method = RequestMethod.POST)
 	public ModelAndView saveAuthorizedUsers(HttpSession session, HttpServletResponse response,
 	  @RequestParam("authorizedUserList") ArrayList<VaultUser> authorizedUserList) throws SQLException {
 		ModelAndView mv = new ModelAndView("mainPage");

@@ -17,6 +17,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.csus.vault.web.model.VaultUser;
 import com.csus.vault.web.model.VaultWillDetail;
+import com.csus.vault.web.service.PeerConnectionService;
 import com.csus.vault.web.service.WillManagerService;
 
 @Controller("mainController")
@@ -48,9 +49,10 @@ public class MainController {
 	public ModelAndView saveUpdatedWill(HttpSession session, HttpServletResponse response, @RequestParam("updateWill") MultipartFile updateWill) {
 		ModelAndView mv = new ModelAndView("mainPage");		
 		VaultUser user = (VaultUser) session.getAttribute("user");
+		PeerConnectionService peer = (PeerConnectionService) session.getAttribute("peer");
 		if (!updateWill.isEmpty()) {
 			willService = new WillManagerService();
-			willService.uploadUpdatedWill(updateWill, user);
+			willService.uploadUpdatedWill(updateWill, user, peer);
 			VaultWillDetail updatedWill = willService.getWillDetailbyUserId(user);
 			session.setAttribute("will", updatedWill);
 		} else {

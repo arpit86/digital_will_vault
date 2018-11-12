@@ -1,6 +1,6 @@
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-    pageEncoding="ISO-8859-1"%>
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859-1"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -63,7 +63,7 @@
 	</script>
 </head>
 <body>
-	<form id="authorizeForm" action = "authorizeUserView" method = "post" modelAttribute="authorizedUserList">
+	<form:form id="authorizeForm" modelAttribute="authorizedUserList" action = "authorizeUserProcess" method = "post">
 		<t2>Please provide the user's name and email in order to authorize them to view the Will</t2>
 		<br/>
 		<input type="button" value="Add User" onclick="addNewAuthorizedUser('authorizeUserDataTable')"/>
@@ -81,13 +81,13 @@
 			<tr>
         		<td>${i.index}</td>
 				<td>
-					<input type="text" path="authorizedUserList[${i.index}].user_firstName"/>
+					<form:input path="authorizedUserList[${i.index}].user_firstName"/>
         		</td>
 				<td>
-					<input type="text" path="authorizedUserList[${i.index}].user_lastName"/>
+					<form:input path="authorizedUserList[${i.index}].user_lastName"/>
 				</td>
 				<td>
-					<input type="text" path="authorizedUserList[${i.index}].userEmail"/>
+					<form:input path="authorizedUserList[${i.index}].userEmail"/>
 				</td>
 				<td>
 					<input type="checkbox" name="checkboxes" />
@@ -95,7 +95,7 @@
 			</tr>
 			</c:forEach>
 		</table>
-		<input type="submit" value="Authorize User"/>
-</form>
+		<form:button id="authorize" name="authorize">Authorize User</form:button>
+</form:form>
 </body>
 </html>

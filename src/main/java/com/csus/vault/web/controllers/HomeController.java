@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.csus.vault.web.model.VaultUser;
+import com.csus.vault.web.service.PeerConnectionService;
 import com.csus.vault.web.service.UserService;
 
 @Controller("homeController")
@@ -41,13 +42,17 @@ public class HomeController {
 		System.out.println("Register User: "+ user.getUser_firstName() +" "+ user.getUser_lastName());
 		ModelAndView mv = new ModelAndView("mainPage", "name", user.getUser_firstName() + " " + user.getUser_lastName());
 		userService = new UserService();
-		request.getSession().setAttribute("user",user);
-		
+		PeerConnectionService peer = new PeerConnectionService();
+		request.getSession().setAttribute("peer", peer);
 		String verifyUser = userService.verify(user);
 		if(verifyUser.equalsIgnoreCase("new")) {
-			userService.register(user);
+			userService.register(user, peer);
+			user = userService.getUserDetailByEmail(user.getUserEmail());
+			request.getSession().setAttribute("user",user);
 		} else if(verifyUser.equalsIgnoreCase("authorizeUser")) {
-			userService.registerAuthorizeUser(user);
+			userService.registerAuthorizeUser(user, peer);
+			user = userService.getUserDetailByEmail(user.getUserEmail());
+			request.getSession().setAttribute("user",user);
 		} else {
 			mv = new ModelAndView("login", "user", new VaultUser());
 		}
@@ -68,9 +73,9 @@ public class HomeController {
 		ModelAndView mv = new ModelAndView("login");
 		System.out.println("Login User: "+ user.getUserEmail());
 		userService = new UserService();
-		request.getSession().setAttribute("user",user);
 		if(userService.verify(user).equalsIgnoreCase("exist")) {
 			VaultUser dbUser = userService.getUserDetailByEmail(user.getUserEmail());
+			request.getSession().setAttribute("user",dbUser);
 			if(userService.isPasswordValid(user.getUserPassword().toCharArray(), dbUser.getPasswordSalt().getBytes(Charset.forName("UTF-8")), 
 					dbUser.getUserPassword().getBytes(Charset.forName("UTF-8")))){
 				System.out.println("User is verified");

@@ -34,21 +34,10 @@ public class PeerConnectionService extends Thread {
 	private Integer port;
 	private PrintWriter outWriter;
 	private BufferedReader inReader;
-	private Boolean isMiner = false;
+	private boolean isMiner = false;
 	PeerInfo peerInfo;
 	ArrayList<Transaction> transactionPool = new ArrayList<Transaction>();
 	
-	public static PeerConnectionService getInstance() {
-		return peer;
-    }
-
-	private static PeerConnectionService peer = new PeerConnectionService();
-
-	/**
-	 *  This constructor avoids direct instantiation.
-	 */
-	private PeerConnectionService() {}
-
 	public void sendToAll(Transaction T) {
 		PrintWriter transactionWriter;
 		for (PeerInfo p : peerList) {
@@ -64,6 +53,14 @@ public class PeerConnectionService extends Thread {
 		}
 	}
 	
+	public boolean isMiner() {
+		return isMiner;
+	}
+
+	public void setMiner(boolean isMiner) {
+		this.isMiner = isMiner;
+	}
+
 	public void connectToBootNode(String email) {
 		this.email = email;
 		this.peerList = new ArrayList<PeerInfo>();

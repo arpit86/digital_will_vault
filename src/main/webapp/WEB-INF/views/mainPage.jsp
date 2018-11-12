@@ -16,7 +16,7 @@
 		<t3>If you wish to upload a new Will, please select the link below</t3>
 		<table>
 			<tr>
-				<td align="center"><a href="uploadFile">Upload a New Will</a></td>
+				<td align="center"><a href="upload">Upload a New Will</a></td>
 			</tr>
 		</table>
 		<br/>
@@ -27,16 +27,22 @@
 			</tr>
 		</table>
 		<br/>
-		<t3>If you wish to view the last uploaded Will, please select the link below</t3>
+		<t3>If you wish to request the Will owner to provide token to view the Will, please select the link below</t3>
 		<table>
 			<tr>
 				<td align="center"><a href="viewWill">View Existing Will</a></td>
 			</tr>
 		</table>
-		<t3>If you wish to modify the lastest Will, please select the link below</t3>
+		<t3>Please select the link below to request for a Public Key</t3>
 		<table>
 			<tr>
-				<td align="center"><a href="modifyWill">Modify Existing Will</a></td>
+				<td align="center"><a href="requestPubicKey">Request Public Key</a></td>
+			</tr>
+		</table>
+		<t3>Please upload the token provided by Will Owner to view the Will, please select the link below</t3>
+		<table>
+			<tr>
+				<td align="center"><a href="verifyToken">Upload Token</a></td>
 			</tr>
 		</table>
 </body>

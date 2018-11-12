@@ -1,6 +1,8 @@
 package com.csus.vault.web.service;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.InvalidKeyException;
@@ -9,6 +11,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.sql.SQLException;
@@ -19,6 +22,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,23 +36,19 @@ public class WillManagerService {
 	private WillDaoOperation willDao = null;
 	private BlockManagerService blockService = null;
 	private EmailService emailService =null;
-	private PeerConnectionService peer;
+	//private PeerConnectionService peer;
 	
-	public WillManagerService() {
-		peer = PeerConnectionService.getInstance();
-	}
-	
-	public void upload(MultipartFile file, VaultUser user) {
+	public void upload(MultipartFile file, VaultUser user, PeerConnectionService peer) {
 		try {
 			byte[] bytes = file.getBytes();
 			
 			// Encrypting the file data with user's Public key
-			byte[] encryptedData = encryptUploadedWillWithPubKey(bytes, user.getUserEmail());
+			byte[] encryptedData = encryptUploadedWillWithSymKey(bytes, user.getUserEmail());
 			String willHash = applySha256ToEncryptedWill(encryptedData.toString());
 			
 			// Saving the encrypted will to database
 			willDao = new WillDaoOperation();
-			willDao.saveEncryptedWillToDB(encryptedData, user, willHash);
+			willDao.saveEncryptedWillToDB(encryptedData, user, willHash, peer);
 		} catch(IOException io) {
 			System.out.println("WillManagerService:upload:: Exeption: " + io.getMessage());
 		} catch (SQLException ex) {
@@ -56,17 +56,17 @@ public class WillManagerService {
 		}
 	}
 	
-	public void uploadUpdatedWill(MultipartFile updateWillFile, VaultUser user) {
+	public void uploadUpdatedWill(MultipartFile updateWillFile, VaultUser user, PeerConnectionService peer) {
 		try {
 			byte[] bytes = updateWillFile.getBytes();
 			
 			// Encrypting the file data with user's Public key
-			byte[] encryptedData = encryptUploadedWillWithPubKey(bytes, user.getUserEmail());
+			byte[] encryptedData = encryptUploadedWillWithSymKey(bytes, user.getUserEmail());
 			String willHash = applySha256ToEncryptedWill(encryptedData.toString());
 			
 			// Saving the encrypted will to database
 			willDao = new WillDaoOperation();
-			willDao.saveModifiedWillToDB(encryptedData, user, willHash);
+			willDao.saveModifiedWillToDB(encryptedData, user, willHash, peer);
 		} catch(IOException io) {
 			System.out.println("WillManagerService:uploadUpdatedWill:: IOExeption: " + io.getMessage());
 		} catch (SQLException ex) {
@@ -94,15 +94,45 @@ public class WillManagerService {
         return keyFactory.generatePublic(spec);
     }
 	
+    public SecretKeySpec getSecretKey(String userEmail) throws IOException{
+        byte[] keyBytes = Files.readAllBytes(new File("SecretKey/symKey_"+ userEmail).toPath());
+        return new SecretKeySpec(keyBytes, "AES");
+    }
+    
+    public void generateSecretKey(String userEmail) {
+    	SecureRandom rnd = new SecureRandom();
+        byte [] key = new byte [16];
+        rnd.nextBytes(key);
+        SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
+        writeToFile("SecretKey/symKey_"+ userEmail, secretKey.getEncoded());
+    }
+    
+    /*
+	 *  This function writes the byte[] data to the file path provided.
+	 */
+	private void writeToFile(String path, byte[] key) {
+		try {
+			File f = new File(path);
+			f.getParentFile().mkdirs();
+			FileOutputStream fos = new FileOutputStream(f);
+			fos.write(key);
+	        fos.flush();
+	        fos.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	/*
 	 *  This function will encrypt the uploaded will text with user's public key.
 	 */
-	private byte[] encryptUploadedWillWithPubKey(byte[] willData, String userEmail) {
+	private byte[] encryptUploadedWillWithSymKey(byte[] willData, String userEmail) {
 		byte[] encryptData = null;
 		try {
-			Cipher encrypt = Cipher.getInstance("RSA");
-			encrypt.init(Cipher.ENCRYPT_MODE, getPublic(userEmail));
+			Cipher encrypt = Cipher.getInstance("AES");
+			encrypt.init(Cipher.ENCRYPT_MODE, getSecretKey(userEmail));
 			encryptData = encrypt.doFinal(willData);
 		} catch (InvalidKeyException ex) {
 			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: InvalidKeyException: " + ex.getMessage());
@@ -123,8 +153,8 @@ public class WillManagerService {
 	public byte[] decryptWillDataWithPrivateKey(byte[] encryptData, String userEmail) {
 		byte[] originalData = null;
 		try {
-			Cipher decrypt = Cipher.getInstance("RSA");
-			decrypt.init(Cipher.DECRYPT_MODE, getPrivate(userEmail));
+			Cipher decrypt = Cipher.getInstance("AES");
+			decrypt.init(Cipher.DECRYPT_MODE, getSecretKey(userEmail));
 			originalData = decrypt.doFinal(encryptData);
 		} catch (InvalidKeyException ex) {
 			System.out.println("WillManagerService:decryptWillDataWithPrivateKey:: InvalidKeyException: " + ex.getMessage());
@@ -219,8 +249,8 @@ public class WillManagerService {
 			emailService = new EmailService();
 			emailService.sendEmailToOwnerToSendWillContentToRequestor(ownerEmail, user, willId);
 			
-			blockService = new BlockManagerService();
-			blockService.createBlockWithWillViewedTransaction(willId, user.getUserId(), peer);
+			//blockService = new BlockManagerService();
+			//blockService.createBlockWithWillViewedTransaction(willId, user.getUserId(), peer);
 		} catch (SQLException e) {
 			System.out.println("BlockManagerService:requestOwnerForWill:: SQLExeption: " + e.getMessage());
 		}

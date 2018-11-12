@@ -29,7 +29,7 @@ public class UserDaoOperation {
             	PreparedStatement query = conn.prepareStatement("select * from vault_user where user_email = ?");
             	query.setString(1, user.getUserEmail());
             	ResultSet rs = query.executeQuery();
-            	if(rs.getFetchSize() == 0) {
+            	if(rs.getFetchSize() < 0) {
             		while(rs.next()) {
             			if(rs.getString("user_email").equalsIgnoreCase(user.getUserEmail())){
             				System.out.println("UserDaoOperation:verify:: user already present in database.");
@@ -75,10 +75,8 @@ public class UserDaoOperation {
 				query.setString(7, user.getUserEmail());
 				query.executeUpdate();
 				System.out.println("UserDaoOperation:register:: saved user: " + user.getUserEmail());
-				conn.commit();
 			} catch (Exception ex) {
             	System.out.println("UserDaoOperation:register:: Unable to register the User Record: Exception: "+ ex.getMessage());
-            	conn.rollback();
             } finally {
             	conn.close();
             }
@@ -94,7 +92,7 @@ public class UserDaoOperation {
 		if (null != conn && !userEmail.isEmpty()) {
 			System.out.println("UserDaoOperation:getUserDetailByEmail:: inside verify()");
             try {
-            	PreparedStatement query = conn.prepareStatement("select * from vault_user where userEmail = ?");
+            	PreparedStatement query = conn.prepareStatement("select * from vault_user where user_email=?");
             	query.setString(1, userEmail);
             	ResultSet rs = query.executeQuery();
             	while(rs.next()) {
@@ -134,12 +132,9 @@ public class UserDaoOperation {
 				query.setString(2, user.getPasswordSalt());
 				query.setString(3, user.getUserEmail());
 				query.executeUpdate();
-				conn.commit();
 				System.out.println("UserDaoOperation:update:: updated user: " + user.getUserEmail());
-				query.close();
 			} catch (Exception ex) {
             	System.out.println("UserDaoOperation:update:: Unable to update the User Record: Exception: "+ ex.getMessage());
-            	conn.rollback();
             } finally {
             	conn.close();
             }
@@ -151,19 +146,16 @@ public class UserDaoOperation {
 		if(conn != null && authUser != null) {
 			System.out.println("UserDaoOperation:register:: inside register()");
 			try {
-				PreparedStatement query = conn.prepareStatement("insert into VaultAuthorizedUser (willId, vault_userId, " + 
-						"authorizedTS, authorizedView, authorizedUpdate) VALUES (?, ?, now(), ?, ?)");
+				PreparedStatement query = conn.prepareStatement("insert into vault_authorized_user (will_id, vault_userId, " + 
+						"authorizedTS, authorized_view, authorized_update) VALUES (?, ?, now(), ?, ?)");
 				query.setInt(1, authUser.getWillId());
 				query.setInt(2, authUser.getVault_userId());
 				query.setString(3, authUser.getAuthorizedView());
 				query.setString(4, authUser.getAuthorizedUpdate());
 				query.executeUpdate();
 				System.out.println("UserDaoOperation:saveAuthorizedUser:: saved authorized user: " + authUser.getVault_userId());
-				conn.commit();
-				query.close();
 			} catch (Exception ex) {
             	System.out.println("UserDaoOperation:saveAuthorizedUser:: Unable to save the User Record: Exception: "+ ex.getMessage());
-            	conn.rollback();
             } finally {
             	conn.close();
             }

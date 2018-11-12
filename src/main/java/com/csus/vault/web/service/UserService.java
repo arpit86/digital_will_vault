@@ -30,21 +30,20 @@ public class UserService {
 	private EmailService emailService = null;
 	private final int ITERATIONS = 1000;
 	private final int KEY_LENGTH = 128;
-	private PeerConnectionService peer;
+	//private PeerConnectionService peer;
 	
-	public UserService() {
-		peer = PeerConnectionService.getInstance();
-	}
-
 	/*
 	 *  Register a new user
 	 */
-	public void register(VaultUser user) {
+	public void register(VaultUser user, PeerConnectionService peer) {
 		try {
 			userDao = new UserDaoOperation();
 			generateKeyPair(user);
 			generatePasswordHashAndSalt(user);
 			userDao.register(user);
+			if(userDao.getUserDetailByEmail(user.getUserEmail()).getUserId() == 1) {
+				peer.setMiner(true);
+			}
 			peer.connectToBootNode(user.getUserEmail());
 			//start the server listening thread
 			peer.start();
@@ -60,7 +59,7 @@ public class UserService {
 	/*
 	 *  Register a new authorized user
 	 */
-	public void registerAuthorizeUser(VaultUser user) throws SQLException {
+	public void registerAuthorizeUser(VaultUser user, PeerConnectionService peer) throws SQLException {
 		userDao = new UserDaoOperation();
 		generatePasswordHashAndSalt(user);
 		userDao.update(user);
@@ -109,14 +108,13 @@ public class UserService {
 	}
 	
 	/*
-	 *  Thie function writes the byte[] data to the file path provided.
+	 *  This function writes the byte[] data to the file path provided.
 	 */
 	private void writeToFile(String path, byte[] key) {
 		try {
 			File f = new File(path);
 			f.getParentFile().mkdirs();
-			FileOutputStream fos;
-			fos = new FileOutputStream(f);
+			FileOutputStream fos = new FileOutputStream(f);
 			fos.write(key);
 	        fos.flush();
 	        fos.close();
