@@ -1,63 +1,24 @@
 package com.csus.vault.web.model;
 
-import java.io.Serializable;
 import java.util.Date;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.NamedQuery;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
 
 /**
  * The persistent class for the vault_user database table.
  * 
  */
-@Entity
-@Table(name="vault_user")
-@NamedQuery(name="VaultUser.findAll", query="SELECT v FROM VaultUser v")
-public class VaultUser implements Serializable {
-	private static final long serialVersionUID = 1L;
-
-	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name="user_id", unique=true, nullable=false)
+public class VaultUser{
 	private int userId;
-
-	@Column(name="password_salt", nullable=false, length=256)
 	private String passwordSalt;
-
-	@Temporal(TemporalType.TIMESTAMP)
 	private Date user_createdTS;
-
-	@Column(name="user_email", nullable=false, length=45)
 	private String userEmail;
-
-	@Column(nullable=false, length=45)
 	private String user_firstName;
-
-	@Column(length=45)
 	private String user_lastName;
-
-	@Column(name="user_password", nullable=false, length=256)
 	private String userPassword;
-
-	@Column(name="user_phone")
 	private String userPhone;
-
-	@Column(length=2048)
 	private byte[] user_publicKey;
-
-	@Temporal(TemporalType.TIMESTAMP)
 	private Date user_updatedTS;
 
-	public VaultUser() {
-	}
+	public VaultUser() {}
 
 	public int getUserId() {
 		return this.userId;

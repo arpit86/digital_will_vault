@@ -10,8 +10,8 @@
 	</head>
 
 	<body>
-		<t2>Welcome ${name} to the Secure Digital Vault</t2>
-		<p align="center">Please select the operation you wish to perform from the below options:</p>
+		<t2 align="center">Welcome ${name} to the Secure Digital Vault</t2>
+		<p>Please select the operation you wish to perform from the below options:</p>
 		<br/>
 		<t3>If you wish to upload a new Will, please select the link below</t3>
 		<table>
@@ -33,16 +33,18 @@
 				<td align="center"><a href="viewWill">View Existing Will</a></td>
 			</tr>
 		</table>
+		<br/>
 		<t3>Please select the link below to request for a Public Key</t3>
 		<table>
 			<tr>
-				<td align="center"><a href="requestPubicKey">Request Public Key</a></td>
+				<td align="center"><a href="requestPublicKey">Request Public Key</a></td>
 			</tr>
 		</table>
-		<t3>Please upload the token provided by Will Owner to view the Will, please select the link below</t3>
+		<br/>
+		<!-- <t3>Please upload the token provided by Will Owner to view the Will, please select the link below</t3>
 		<table>
 			<tr>
 				<td align="center"><a href="verifyToken">Upload Token</a></td>
 			</tr>
-		</table>
+		</table> -->
 </body>

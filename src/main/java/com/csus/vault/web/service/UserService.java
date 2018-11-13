@@ -4,19 +4,15 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 
 import com.csus.vault.web.dao.UserDaoOperation;
 import com.csus.vault.web.model.VaultAuthorizedUser;
@@ -97,14 +93,14 @@ public class UserService {
         byte[] privateKey = keyGen.genKeyPair().getPrivate().getEncoded();
         user.setUser_publicKey(publicKey);
         
-        //Send an email to user with private key to the user email
-        emailService = new EmailService();
-        emailService.sendEmailContainingThePrivateKey(privateKey, user.getUserEmail());
-        
-        System.out.println("Public key is saved in database and the Private key is emailed to user.");
+         System.out.println("Public key is saved in database and the Private key is emailed to user.");
         // The public-private key is saved to KeyPair folder: <keyType>_<userEmail>
         writeToFile("KeyPair/publicKey_" + user.getUserEmail(), publicKey);
         writeToFile("KeyPair/privateKey_" + user.getUserEmail(), privateKey);
+        
+        //Send an email to user with private key to the user email
+        emailService = new EmailService();
+        emailService.sendEmailContainingThePrivateKey(privateKey, user.getUserEmail());
 	}
 	
 	/*
@@ -177,14 +173,14 @@ public class UserService {
 			byte[] privateKey = keyGen.genKeyPair().getPrivate().getEncoded();
 			user.setUser_publicKey(publicKey);
 
-			// Send an email to user with private key to the user email
-			emailService = new EmailService();
-			emailService.sendEmailAuthorizeUserToRegister(privateKey, user.getUserEmail(), will);
-
 			System.out.println("Public key is saved in database and the Private key is emailed to user.");
 			// The public-private key is saved to KeyPair folder: <keyType>_<userEmail>
 			writeToFile("KeyPair/publicKey_" + user.getUserEmail(), publicKey);
 			writeToFile("KeyPair/privateKey_" + user.getUserEmail(), privateKey);
+			
+			// Send an email to user with private key to the user email
+			emailService = new EmailService();
+			emailService.sendEmailAuthorizeUserToRegister(privateKey, user.getUserEmail(), will);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -200,19 +196,4 @@ public class UserService {
 		userDao = new UserDaoOperation();
 		userDao.saveAuthorizedUser(authUser);
 	}
-	
-    public SecretKeySpec getSecretKey(String filename, String algorithm) throws IOException{
-        byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
-        return new SecretKeySpec(keyBytes, algorithm);
-    }
-    
-    public void GenerateSymmetricKey(int length, String algorithm) 
-            throws UnsupportedEncodingException, NoSuchAlgorithmException, NoSuchPaddingException {
-    	SecretKeySpec secretKey;
-            SecureRandom rnd = new SecureRandom();
-            byte [] key = new byte [16];
-            rnd.nextBytes(key);
-            secretKey = new SecretKeySpec(key, "AES");
-            writeToFile("OneKey/secretKey_", secretKey.getEncoded());
-    }
 }

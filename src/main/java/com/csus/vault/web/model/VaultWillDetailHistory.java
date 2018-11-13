@@ -1,39 +1,19 @@
 package com.csus.vault.web.model;
 
-import java.io.Serializable;
-import javax.persistence.*;
 import java.util.Date;
-
 
 /**
  * The persistent class for the vault_will_detail database table.
  * 
  */
-@Entity
-@Table(name="vault_will_detail_history")
-@NamedQuery(name="VaultWillDetailHistory.findAll", query="SELECT v FROM VaultWillDetailHistory v")
-public class VaultWillDetailHistory implements Serializable {
-	private static final long serialVersionUID = 1L;
-
-	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name="hist_will_id")
+public class VaultWillDetailHistory{
+	
 	private int histWillId;
-	
 	private int will_id;
-
 	private int vault_userId;
-
-	@Column(name="will_content")
 	private byte[] willContent;
-
-	@Temporal(TemporalType.DATE)
 	private Date will_createdTS;
-
-	@Temporal(TemporalType.DATE)
 	private Date will_updatedTS;
-	
-	@Column(name="will_hash")
 	private String willHash;
 
 	public VaultWillDetailHistory() {}

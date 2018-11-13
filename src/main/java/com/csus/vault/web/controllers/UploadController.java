@@ -1,13 +1,13 @@
 package com.csus.vault.web.controllers;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -50,17 +50,21 @@ public class UploadController {
 	
 	@RequestMapping(value = "/authorizeUserView", method = RequestMethod.GET)
 	public ModelAndView viewAuthorizeUsers(Model model, HttpServletResponse response) {
-		model.addAttribute("authorizedUserList", new ArrayList<VaultUser>());
 		return new ModelAndView("authorizeUserView");
 	}
 	
 	@RequestMapping(value = "/authorizeUserProcess", method = RequestMethod.POST)
 	public ModelAndView saveAuthorizedUsers(HttpSession session, HttpServletResponse response,
-	  @RequestParam("authorizedUserList") ArrayList<VaultUser> authorizedUserList) throws SQLException {
-		ModelAndView mv = new ModelAndView("mainPage");
+			@RequestParam("user_lastName") String user_lastName, @RequestParam("user_firstName") String user_firstName,
+			@RequestParam("userEmail") String userEmail) throws SQLException {
+		ModelAndView mv = new ModelAndView("authorizeUserView");
+		VaultUser authorizeUser = new VaultUser();
+		authorizeUser.setUser_firstName(user_firstName);
+		authorizeUser.setUser_lastName(user_lastName);
+		authorizeUser.setUserEmail(userEmail);
 		VaultWillDetail will = (VaultWillDetail) session.getAttribute("will");
 		willService = new WillManagerService();
-		willService.addAuthorizedWillUser(authorizedUserList, will);
+		willService.addAuthorizedWillUser(authorizeUser, will);
 		return mv;
 	}
 

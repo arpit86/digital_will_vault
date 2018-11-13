@@ -33,13 +33,12 @@ public class MainController {
 	@RequestMapping(value = "/modifyWill", method = RequestMethod.GET)
 	public ModelAndView viewUploadedWill(HttpSession session, HttpServletResponse response) throws IOException {
 		VaultUser user = (VaultUser) session.getAttribute("user");
-		VaultWillDetail will = (VaultWillDetail) session.getAttribute("will");
+		willService = new WillManagerService();
+		VaultWillDetail will = willService.getWillDetailbyUserId(user);
 		if(user.getUserId() == will.getVault_userId()) {
-			willService = new WillManagerService();
-			byte[] decryptedData = willService.decryptWillDataWithPrivateKey(will.getWillContent(),
-					user.getUserEmail());
+			byte[] decryptedData = willService.decryptWillDataWithSymKey(will.getWillContent(), user.getUserEmail());
 			String fileContent = new String(decryptedData, "UTF-8");
-			return new ModelAndView("modifyWill", "fileContent", fileContent);
+			return new ModelAndView("modifyWill", "willContent", fileContent);
 		} else {
 			return new ModelAndView("notAuthorized");
 		}
@@ -62,7 +61,6 @@ public class MainController {
 		return mv;
 	}
 	
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/viewWill", method = RequestMethod.GET)
 	public ModelAndView viewUploadFile(HttpSession session, HttpServletResponse response) {
 		VaultUser user = (VaultUser) session.getAttribute("user");
@@ -81,6 +79,26 @@ public class MainController {
 			willService.requestOwnerForWill(user, willId);
 		} else {
 			mv = new ModelAndView("error", "error", "The Will ID selected is invalid.");
+		}
+		return mv;
+	}
+	
+	@RequestMapping(value = "/requestPublicKey", method = RequestMethod.GET)
+	public ModelAndView viewRequestPublicKey(HttpSession session, HttpServletResponse response) throws IOException {
+		return new ModelAndView("requestPublicKey");
+	}
+	
+	@RequestMapping(value = "/requestPubKey", method = RequestMethod.POST)
+	public ModelAndView requestPublicKey(HttpSession session, HttpServletResponse response,
+	  @RequestParam("email") String email) {
+		ModelAndView mv = new ModelAndView("mainPage");
+		VaultUser user = (VaultUser) session.getAttribute("user");
+		if (!email.isEmpty()) {
+			willService = new WillManagerService();
+			willService.requestPublicKey(user.getUserEmail(), email);
+		} else {
+			String error = null;
+			mv = new ModelAndView("error", error,"Invalid Input. Try again.");
 		}
 		return mv;
 	}

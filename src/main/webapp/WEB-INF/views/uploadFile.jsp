@@ -30,6 +30,9 @@
                     <td colspan="2" align="center">
          				<input type = "submit" value = "Upload File" />
          			</td>
+         			<td>
+         				<a href="mainPage"><input type="button" value="Cancel" name="cancel"></a>
+         			</td>
          		</tr>
          	</table>
      	</form>
