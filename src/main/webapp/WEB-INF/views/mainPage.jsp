@@ -11,23 +11,24 @@
 
 	<body>
 		<t2 align="center">Welcome ${name} to the Secure Digital Vault</t2>
+		<br/>
 		<p>Please select the operation you wish to perform from the below options:</p>
 		<br/>
-		<t3>If you wish to upload a new Will, please select the link below</t3>
+		<t3>To upload a new Will, please select the link below</t3>
 		<table>
 			<tr>
 				<td align="center"><a href="upload">Upload a New Will</a></td>
 			</tr>
 		</table>
 		<br/>
-		<t3>If you wish to modify the lastest Will, please select the link below</t3>
+		<t3>To modify the last uploaded Will, please select the link below</t3>
 		<table>
 			<tr>
 				<td align="center"><a href="modifyWill">Modify Existing Will</a></td>
 			</tr>
 		</table>
 		<br/>
-		<t3>If you wish to request the Will owner to provide token to view the Will, please select the link below</t3>
+		<t3>To request the Will owner to provide token to view the Will, please select the link below</t3>
 		<table>
 			<tr>
 				<td align="center"><a href="viewWill">View Existing Will</a></td>
@@ -41,10 +42,17 @@
 			</tr>
 		</table>
 		<br/>
-		<!-- <t3>Please upload the token provided by Will Owner to view the Will, please select the link below</t3>
+		<t3>To generate a System token file to view the Will, please select the link below</t3>
+		<table>
+			<tr>
+				<td align="center"><a href="generateToken">System Token</a></td>
+			</tr>
+		</table>
+		<br/>
+		<t3>Please upload the token file provided by Will Owner to view the Will, please select the link below</t3>
 		<table>
 			<tr>
 				<td align="center"><a href="verifyToken">Upload Token</a></td>
 			</tr>
-		</table> -->
+		</table>
 </body>

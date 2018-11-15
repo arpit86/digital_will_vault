@@ -4,7 +4,7 @@
 <html>
 	<head>
 	    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-        <title>Will upload to Digital Vault</title>
+        <title>Welcome to Digital Vault</title>
     </head>
     <body>
 	    <t3>Welcome to your Personal Vault ${name}</t3>

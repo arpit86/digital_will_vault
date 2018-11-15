@@ -102,4 +102,23 @@ public class MainController {
 		}
 		return mv;
 	}
+	
+	@RequestMapping(value = "/generateToken", method = RequestMethod.GET)
+	public ModelAndView viewGenerateToken(HttpSession session, HttpServletResponse response) throws IOException {
+		return new ModelAndView("generateToken");
+	}
+	
+	@RequestMapping(value = "/generateTokenrequest", method = RequestMethod.POST)
+	public ModelAndView generateTokenRequest(HttpSession session, HttpServletResponse response,
+	  @RequestParam("requestorEmail") String requestorEmail,  @RequestParam("willNo") String willNo) {
+		ModelAndView mv = new ModelAndView("mainPage");
+		VaultUser user = (VaultUser) session.getAttribute("user");
+		if (!requestorEmail.isEmpty() && !willNo.isEmpty()) {
+			// to be written
+		} else {
+			String error = null;
+			mv = new ModelAndView("error", error,"Invalid Input. Try again.");
+		}
+		return mv;
+	}
 }
