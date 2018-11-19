@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import net.quux00.MerkleTree;
 
 // This class stores the Digital Will uploaded by the user
-public class BlockStructure {
+public class BlockStructure implements java.io.Serializable {
 	
 	private final int DIFFICULTY = 3;
 	private int nonceTemp;
@@ -19,7 +19,7 @@ public class BlockStructure {
 	private String hash;
 	private long nonce;
 	private BlockStructure nextBlockStructure;
-	private MerkleTree merkleTree;
+	private transient MerkleTree merkleTree;
 	
 	//Block constructor
 	public BlockStructure(int blockNumber) {
@@ -109,6 +109,12 @@ public class BlockStructure {
 		return blockHash;
 	}
 	
+	private String verifyBlock(BlockStructure parentBlock) {
+		String blockHeader = blockNumber + parentBlock.timeStamp.toString() + parentBlock.getPreviousHash() + parentBlock.getNonce();
+		String blockHash = merkleTree.getRoot() + blockHeader;
+		return applySha256ToBlockDataWithMultiple(blockHash);
+	}
+	
 	private String calculateHashWithMultiple(String prevHash) {
 		String blockHeader = blockNumber + timeStamp.toString() + prevHash + nonce;
 		String blockHash = merkleTree.getRoot() + blockHeader;
@@ -173,21 +179,16 @@ public class BlockStructure {
 		}
 	}
 	
-	public boolean verifyBlockChainValidity(String prevHash) {
-		boolean isValid = true;
+	public boolean verifyNextBlock(BlockStructure newBlock) {
+		boolean isValid = false;
+		String minedHash = new String(new char[DIFFICULTY]).replace('\0', 'a');
 		buildMerkleTree();
 		
 		//Check whether it is a valid block
-		String blockHash = mineBlock(prevHash);
-		if(blockHash != this.getHash()) {
-			isValid = false;
-		} else {
-			isValid = this.getPreviousHash() == prevHash? true : false;
-		}
-		// Verify that the next block structure verifies the current block's hash.
-		if(nextBlockStructure != null) {
-			return nextBlockStructure.verifyBlockChainValidity(blockHash);
-		}
+		String blockHash = verifyBlock(newBlock);
+		if(blockHash.substring( 0, DIFFICULTY).equals(minedHash) && newBlock.getHash().equals(blockHash)) {
+			isValid = true;
+		} 
 		return isValid;
 	}
 }

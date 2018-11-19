@@ -43,16 +43,29 @@ public class BlockChain {
 		blockList.add(blockStructure);
 	}
 	
-	public void verifyBlockChain(String previousHash) {
+	public int verifyBlock(BlockStructure bobj) {
 		if(headBlock == null) {
-			System.err.println("BlockChain:verifyBlockChain:: Genesis block not present.");
+			if (bobj.getPreviousHash() != null)
+			{
+				return 1; //genesis block expected and non-genesis block received.
+			}
 		}
-		
-		boolean isValid = headBlock.verifyBlockChainValidity(null);
+		else
+		{
+			if(bobj.getPreviousHash() != currentBlock.getHash())
+				return 2; // hash of current block does not match the prevhash of received block.
+		}
+		BlockStructure tempblock = new BlockStructure(this.nextBlockNumber());
+		ArrayList<Transaction> transactionList = new ArrayList<Transaction>();
+		transactionList = bobj.getTransactionList();
+		for (Transaction t : transactionList) {
+			tempblock.addTransactionToBlock(t);
+		}
+		boolean isValid = tempblock.verifyNextBlock(bobj);
 		if(isValid) {
-			System.out.println("BlockChain:verifyBlockChain:: The block chain is valid");
+			return 0; //block passed nonce verification.
 		} else {
-			System.out.println("BlockChain:verifyBlockChain:: The block chain is invalid");
+			return 3; // block failed nonce verification. 
 		}
 	}
 	

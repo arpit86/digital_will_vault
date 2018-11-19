@@ -46,7 +46,7 @@ public class UserService {
 			}
 			peer.connectToBootNode(user.getUserEmail());
 			//start the server listening thread
-			peer.start();
+			peer.run();
 			blockService = new BlockManagerService();
 			blockService.createBlockWithPublicKeyTransaction(user,peer);
 		} catch (NoSuchAlgorithmException e) {
@@ -65,7 +65,7 @@ public class UserService {
 		userDao.update(user);
 		peer.connectToBootNode(user.getUserEmail());
 		//start the server listening thread
-		peer.start();
+		peer.run();
 		blockService = new BlockManagerService();
 		blockService.createBlockWithPublicKeyTransaction(user, peer);
 	}

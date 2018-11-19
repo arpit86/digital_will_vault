@@ -26,5 +26,6 @@
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/p2p_networking"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/merkle-tree"/>
+	<classpathentry kind="lib" path="target/digital-vault-web/lib/merkletree.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

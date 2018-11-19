@@ -3,6 +3,7 @@ package com.csus.vault.web.service;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -13,6 +14,7 @@ import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.csus.vault.web.block.BlockChain;
 import com.csus.vault.web.block.BlockStructure;
@@ -21,7 +23,7 @@ import com.csus.vault.web.block.Transaction;
 
 import net.quux00.MerkleTree;
 
-public class PeerConnectionService extends Thread {
+public class PeerConnectionService {
 
 	public static final int BOOT_PORT = 2999;
 	public static final int TX_COUNT_TRESHOLD = 4;
@@ -39,18 +41,48 @@ public class PeerConnectionService extends Thread {
 	ArrayList<Transaction> transactionPool = new ArrayList<Transaction>();
 	
 	public void sendToAll(Transaction T) {
-		PrintWriter transactionWriter;
+		System.out.println(email+" adding transaction "+ T + " to own pool before sending to peers");
+		transactionPool.add(T);
 		for (PeerInfo p : peerList) {
-			Socket peerSocket = p.getSocket();
 			try {
-				transactionWriter = new PrintWriter(peerSocket.getOutputStream(), true);
-				transactionWriter.println("transaction");
-				ObjectOutputStream transactionDataWriter = new ObjectOutputStream(peerSocket.getOutputStream());
+			ObjectOutputStream transactionDataWriter;
+			System.out.println(email+" sending transaction "+ T + " to peer "+ p.getEmail());
+			do
+			{
+				transactionDataWriter = p.getObjectOutputStream();
+			} while(transactionDataWriter==null);
 				transactionDataWriter.writeObject(T);
+				//transactionDataWriter.flush();
 			} catch (IOException io) {
 				io.printStackTrace();
 			}
 		}
+	}
+	
+	public void sendAllTxtoPeer(Integer peerIndex) {
+		try {
+			ObjectOutputStream transactionDataWriter = peerList.get(peerIndex).getObjectOutputStream();
+		for (Transaction t : transactionPool) {
+				System.out.println(email +" sending transaction "+ t + " from pool to new peer "+ peerList.get(peerIndex).getEmail());
+				transactionDataWriter.writeObject(t);
+				//transactionDataWriter.flush();
+				}
+		} catch (IOException io) {
+			io.printStackTrace();
+		} 
+	}
+	
+	public void sendAllBlockstoPeer(Integer peerIndex) {
+		try {
+			ObjectOutputStream BlockDataWriter = peerList.get(peerIndex).getObjectOutputStream();
+			for (BlockStructure b : blockChain.getBlockList()) {
+				System.out.println(email +" sending block "+ b + " from blockchain to new peer "+ peerList.get(peerIndex).getEmail());
+				BlockDataWriter.writeObject(b);	
+				//BlockDataWriter.flush();
+				}
+		} catch (IOException io) {
+			io.printStackTrace();
+		} 
 	}
 	
 	public boolean isMiner() {
@@ -125,50 +157,15 @@ public class PeerConnectionService extends Thread {
 				outWriter = new PrintWriter(peerSocket.getOutputStream(), true);
 				outWriter.println(email);
 				p.setSocket(peerSocket);
-				System.out.println("Connected to peer " + p.getEmail());
+				ObjectOutputStream ObjectWriter = new ObjectOutputStream(peerSocket.getOutputStream());
+				ObjectInputStream ObjectReader = new ObjectInputStream(new BufferedInputStream(peerSocket.getInputStream()));
+				p.setObjectInputStream(ObjectReader);
+				p.setObjectOutputStream(ObjectWriter);
+				System.out.println(email+ " connected to peer " + p.getEmail());
 				StartMessageHandlerThread(peerList.indexOf(p));
 			}
-
-			// Start server socket for listening at same port used for connection to boot node
-			ServerSocket serverSocket = new ServerSocket(port);
-
-			// keep listening for incoming connections
-			while (true) {
-				System.out.println(email + " Server listening for connection on port: " + port);
-				// accept is a blocking call meaning that code won't execute further until a
-				// peer connects to server
-				Socket socket = serverSocket.accept();
-
-				// peer connected at this point
-				System.out.println("Connection was established on port: " + socket.getPort());
-
-				// takes input from the client socket
-				inReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-				String data = "";
-
-				try {
-					data = inReader.readLine();
-					System.out.println(email + " received connection request from user " + data);
-
-					// create a peer object to store this peer's data
-					PeerInfo peer = new PeerInfo();
-					peer.setEmail(data);
-
-					// get the peer's port number from socket
-					peer.setPort(socket.getPort());
-					peer.setSocket(socket);
-
-					// Adding the peer to the Arraylist
-					peerList.add(peer);
-					System.out.println("Connected to " + peer.getEmail() + " on port " + socket.getPort());
-
-					// Run a thread for each connected peer to handle transactions and block messages
-					StartMessageHandlerThread(peerList.indexOf(peer));
-				} catch (IOException io) {
-					System.out.println("PeerConnectionService:run:: IOException: "+ io.getMessage());
-				}
-			} // end of while loop
-		} catch (IOException io) {
+			StartListenThread();
+					} catch (IOException io) {
 			System.out.println("PeerConnectionService:run:: IOException: "+ io.getMessage());
 		}
 	}
@@ -179,11 +176,10 @@ public class PeerConnectionService extends Thread {
 		blockInfo.setHash(calculateHashWithMultiple(blockInfo));
 		String blockHash = blockInfo.getHash();
 		while (!blockHash.substring(0, DIFFICULTY).equals(minedHash)) {
-			nonceTemp++;
+			blockInfo.setNonce(++nonceTemp);
 			blockHash = calculateHashWithMultiple(blockInfo);
 		}
 		System.out.println("Mined value: " + blockHash);
-		blockInfo.setNonce(nonceTemp);
 		return blockHash;
 	}
 
@@ -224,13 +220,15 @@ public class PeerConnectionService extends Thread {
 	 * their hash beginning with 'aaa' as DIFICULTY is 3.
 	 */
 	private void setBlockHash(BlockStructure block) {
-		BlockStructure parentBlock = blockChain.getBlockList().get(blockChain.getBlockList().size() - 1);
-		if (parentBlock != null) {
+		if (blockChain.getHeadBlock()==null)
+		{
+			block.setPreviousHash(null);
+		} else
+		{
+			BlockStructure parentBlock = blockChain.getBlockList().get(blockChain.getBlockList().size() - 1);	
 			block.setPreviousHash(parentBlock.getHash());
 			// assign this new generated block to the parent
 			parentBlock.setNextBlockStructure(block);
-		} else {
-			block.setPreviousHash(null);
 		}
 		// Generate the Merkle tree before mining the block
 		buildMerkleTree(block);
@@ -243,7 +241,7 @@ public class PeerConnectionService extends Thread {
 	 * generate a MerkleTree from bottom up.
 	 */
 	private void buildMerkleTree(BlockStructure block) {
-		ArrayList<String> transactionHashList = new ArrayList<>();
+		List<String> transactionHashList = new ArrayList<String>();
 		ArrayList<Transaction> transactionList = block.getTransactionList();
 		if (transactionList.size() == 4) {
 			for (Transaction t : transactionList) {
@@ -258,76 +256,152 @@ public class PeerConnectionService extends Thread {
 	private void StartMessageHandlerThread(Integer peerIndex) {
 		new Thread("" + peerIndex) {
 			public void run() {
-				BufferedReader dataReader;
-				PrintWriter blockWriter;
-
+				try {
 				// keep listening for incoming connections
+					//ObjectInputStream ObjectReader = new ObjectInputStream(new BufferedInputStream(peerList.get(Integer.parseInt(getName())).getSocket().getInputStream()));
+				ObjectInputStream ObjectReader = peerList.get(Integer.parseInt(getName())).getObjectInputStream();
+				int result = 0;
 				while (true) {
 					if (isMiner) {
-						System.out.println("Listening for incoming transactions from peer " + getName());
+						System.out.println(email+" listening for incoming transactions from peer " + peerList.get(Integer.parseInt(getName())).getEmail());
 					} else {
-						System.out.println("Listening for incoming transactions or blocks from peer" + getName());
+						System.out.println(email+" listening for incoming transactions or blocks from peer " + peerList.get(Integer.parseInt(getName())).getEmail());
 					}
-
-					try {
-						dataReader = new BufferedReader(new InputStreamReader(
-								peerList.get(Integer.parseInt(getName())).getSocket().getInputStream()));
-						String data = "";
-						data = dataReader.readLine();
-						if (data.equals("transaction")) {
-							System.out.println("Transaction received from peer " + getName());
-							// Not sure if using a different input stream reader after using one stream reader will work
-							ObjectInputStream transactionReader = new ObjectInputStream(new BufferedInputStream(
-									peerList.get(Integer.parseInt(getName())).getSocket().getInputStream()));
-							Transaction transaction = (Transaction) transactionReader.readObject();
-							transactionPool.add(transaction);
-							System.out.println("Added transaction to pool");
+					Object DataObject =  ObjectReader.readObject();
+						if (DataObject instanceof Transaction) {
+							System.out.println(email+ " received transaction from peer " + peerList.get(Integer.parseInt(getName())).getEmail());
+							Transaction transaction = (Transaction) DataObject;
+							if (transactionPool.contains(transaction))
+							{
+								System.out.println("Transaction "+transaction+" recieved by "+ email+ " from "+peerList.get(Integer.parseInt(getName())).getEmail()+ " already present in pool. Ignoring.");
+							}
+							else
+							{
+								transactionPool.add(transaction);
+								System.out.println("Transaction "+transaction+" recieved by "+ email+ " from "+peerList.get(Integer.parseInt(getName())).getEmail()+ " added to pool.");
+							}
 							if (isMiner) {
 								if (transactionPool.size() == TX_COUNT_TRESHOLD) {
 									BlockStructure block = new BlockStructure(blockChain.nextBlockNumber());
 									for (Transaction t : transactionPool) {
 										block.addTransactionToBlock(t);
 									}
-									block.setTimeStamp(new Timestamp(System.currentTimeMillis()));
-									if (block == blockChain.getHeadBlock()) {
-										block.setPreviousHash(null);
-									} else {
-										block.setPreviousHash(blockChain.getBlockList()
-												.get(blockChain.getBlockList().size() - 1).getHash());
-									}
+									//already setting timestamp in constructor
+									//block.setTimeStamp(new Timestamp(System.currentTimeMillis()));
 									setBlockHash(block);
 									blockChain.acceptIncomingBlock(block);
-									blockChain.verifyBlockChain(block.getPreviousHash());
-
+									//blockChain.verifyBlockChain(block.getPreviousHash());
+									System.out.println("miner Waiting for 10 seconds before broadcasting block");
+									Thread.sleep(10000);
 									// broadcast the block to all peers.
 									for (PeerInfo p : peerList) {
-										Socket peerSocket = p.getSocket();
-										blockWriter = new PrintWriter(peerSocket.getOutputStream(), true);
-										blockWriter.println("block");
-										ObjectOutputStream blockDataWriter = new ObjectOutputStream(
-												peerSocket.getOutputStream());
-										blockDataWriter.writeObject(block);
+										ObjectOutputStream DataObjectWriter;
+										do
+										{
+											DataObjectWriter = p.getObjectOutputStream();
+										} while(DataObjectWriter==null);										
+										DataObjectWriter.writeObject(block);
+										//DataObjectWriter.flush();
 									}
 									// delete transactions from pool
 									transactionPool.clear();
 								}
 							}
-						} else if (data.equals("block")) {
-							System.out.println("Block received from peer " + getName());
-							// Not sure if using a different input stream reader after using one stream
-							// reader will work
-							ObjectInputStream Blockreader = new ObjectInputStream(
-									peerList.get(Integer.parseInt(getName())).getSocket().getInputStream());
-							BlockStructure blockObj = (BlockStructure) Blockreader.readObject();
+						} else if (DataObject instanceof BlockStructure) {
+							System.out.println("Block recieved by "+ email+ " from "+peerList.get(Integer.parseInt(getName())).getEmail());
+							BlockStructure blockObj = (BlockStructure) DataObject;
 							// Verify block here with the local transaction pool "Txpool".
-							blockChain.acceptIncomingBlock(blockObj);
-							blockChain.verifyBlockChain(blockObj.getPreviousHash());
-							// delete transactions from pool
-							transactionPool.clear();
-						}
-					} catch (IOException | ClassNotFoundException io) {
-						io.printStackTrace();
+							System.out.println(email + " verifying transactions in block recieved from "+peerList.get(Integer.parseInt(getName())).getEmail());
+							result = verifyBlockTransactions(blockObj);
+							if (result == 0)
+							{
+								result = blockChain.verifyBlock(blockObj);
+								if (result == 1)
+									System.out.println(email + " genesis block expected and non-genesis block received.");
+								else if (result == 2)
+									System.out.println(email + " hash of current block does not match the prevhash of received block.");
+								else if (result == 3)
+									System.out.println(email + " block failed nonce verification.");
+								else
+								{
+									System.out.println(email + " block passed verification. Added to chain.");
+									blockChain.acceptIncomingBlock(blockObj);
+									// delete transactions from pool
+									transactionPool.clear();
+								}
+							}
+						}					
+				}
+				} catch (IOException | ClassNotFoundException | InterruptedException io) {
+					io.printStackTrace();
+				}
+			}
+		}.start();
+	}
+	
+	private int verifyBlockTransactions(BlockStructure block) {
+		int txcount = 0;
+		System.out.println(email+ " tx pool size= "+ transactionPool.size());
+		for (Transaction t : block.getTransactionList()) {
+			System.out.println(email+ " verifying tx "+ ++txcount);
+			if(!transactionPool.contains(t))
+			{
+				System.out.println(email+ " tx not present in pool. Block rejected");
+				return 1;
+			}
+			System.out.println(email+ " tx present "+ txcount);
+		}
+		System.out.println(email+ " verified all tx in block.");
+		return 0;
+	}
+	
+	private void StartListenThread() {
+		new Thread("listen_server") {
+			public void run() {
+				try {
+				// Start server socket for listening at same port used for connection to boot node
+				ServerSocket serverSocket = new ServerSocket(port);
+				// keep listening for incoming connections
+				while (true) {
+					System.out.println(email + " Server listening for connection on port: " + port);
+					// accept is a blocking call meaning that code won't execute further until a
+					// peer connects to server
+					Socket socket = serverSocket.accept();		
+					InputStream Is = socket.getInputStream();
+					// takes input from the client socket
+					inReader = new BufferedReader(new InputStreamReader(Is));
+					String data = "";
+
+					try {
+						data = inReader.readLine();
+						System.out.println(email+" server recieved connection request on port: " + socket.getPort()+" from user "+ data);
+
+						// create a peer object to store this peer's data
+						PeerInfo peer = new PeerInfo();
+						peer.setEmail(data);
+						//ObjectInputStream ObjectReader = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+						ObjectOutputStream ObjectWriter = new ObjectOutputStream(socket.getOutputStream());
+						ObjectInputStream ObjectReader = new ObjectInputStream(socket.getInputStream());
+						// get the peer's port number from socket
+						peer.setPort(socket.getPort());
+						peer.setSocket(socket);
+						peer.setObjectInputStream(ObjectReader);
+						peer.setObjectOutputStream(ObjectWriter);
+						// Adding the peer to the Arraylist
+						peerList.add(peer);
+						System.out.println(email + " Connected to " + peer.getEmail() + " on port " + socket.getPort());
+						//send all transactions from pool to this peer
+						System.out.println(email+" sending all transaction from pool to " + peer.getEmail() + " on port " + socket.getPort());
+						//sendAllBlockstoPeer(peerList.indexOf(peer));
+						sendAllTxtoPeer(peerList.indexOf(peer));
+						// Run a thread for each connected peer to handle transactions and block messages
+						StartMessageHandlerThread(peerList.indexOf(peer));
+					} catch (IOException io) {
+						System.out.println("PeerConnectionService:run:: IOException: "+ io.getMessage());
 					}
+				} // end of while loop
+				} catch (IOException io) {
+					System.out.println("PeerConnectionService:run:: IOException: "+ io.getMessage());
 				}
 			}
 		}.start();
