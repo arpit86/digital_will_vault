@@ -5,14 +5,14 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>Insert title here</title>
+<title>Welcome to Digital Vault</title>
 </head>
 <body>
 	<t3> The will content is as follows:</t3>
-	<input type="text" id="willContent" value="${willContent}" readonly/>
+	<p>${willContent}</p>
     <br/>
     <br/>				
-	<form action = "modifyWill" method = "post" enctype = "multipart/form-data">
+	<form action="modifyWill" method="post" enctype="multipart/form-data">
         <table border="0">
         	<tr>
             	<td>Please upload your new/ modified digital will using the Browse button:</td>
@@ -20,7 +20,7 @@
            	</tr>
          	<tr>
             	<td colspan="2" align="center"><input type = "submit" value = "Modify File" /></td>
-         		<td colspan="2" align="center"><input type = "button" value = "Cancel" /></td>
+         		<td colspan="2" align="center"><a href="mainPage"><input type="button" value="Cancel" name="cancel"></a></td>
          	</tr>
          </table>
      </form>

@@ -4,7 +4,7 @@
 <html>
 	<head>
 	    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-        <title>Will view from Digital Vault</title>
+        <title>Welcome to Digital Vault</title>
     </head>
     <body>
 	    <t3>Welcome to your Personal Vault ${name}</t3>
@@ -12,7 +12,7 @@
         <br/>
         <p> 
         	<br/>Please select the Will below to View:
-        	<br/><span style="color:red;">Once you select the Will you wish to view, an email is sent to the owner to provide you the Will content.</span> 
+        	<br/><span style="color:red;">Once you select the Will you wish to view, an email is sent to the owner to provide you the access token via email.</span> 
         </p>
         <br/>
         <form action = "viewWill" method = "post">

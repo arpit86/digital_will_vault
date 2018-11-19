@@ -35,7 +35,7 @@ public class WillManagerService {
 	
 	private WillDaoOperation willDao = null;
 	private BlockManagerService blockService = null;
-	private EmailService emailService =null;
+	private EmailService emailService = null;
 	//private PeerConnectionService peer;
 	
 	public void upload(MultipartFile file, VaultUser user, PeerConnectionService peer) {
@@ -150,7 +150,7 @@ public class WillManagerService {
 		return encryptData;
 	}
 	
-	public byte[] decryptWillDataWithPrivateKey(byte[] encryptData, String userEmail) {
+	public byte[] decryptWillDataWithSymKey(byte[] encryptData, String userEmail) {
 		byte[] originalData = null;
 		try {
 			Cipher decrypt = Cipher.getInstance("AES");
@@ -197,25 +197,23 @@ public class WillManagerService {
 		return hexDataValue.toString();
 	}
 
-	public void addAuthorizedWillUser(ArrayList<VaultUser> authorizedUserList, VaultWillDetail will) throws SQLException {
+	public void addAuthorizedWillUser(VaultUser authorizeUser, VaultWillDetail will) throws SQLException {
 		UserService userService = new UserService();
 		VaultAuthorizedUser authUser = null;
-		for(VaultUser u: authorizedUserList) {
-			if(userService.verify(u).equalsIgnoreCase("new")) {
-				u.setUser_createdTS(new Date());
-				u.setUser_updatedTS(new Date());
-				userService.generateKeyPairForAuthorizedUser(u, will);
-				userService.saveAuthorizeUserToUserTbl(u);
-			}
-			VaultUser temp = userService.getUserDetailByEmail(u.getUserEmail());
-			authUser = new VaultAuthorizedUser();
-			authUser.setVault_userId(temp.getUserId());
-			authUser.setAuthorizedTS(new Date());
-			authUser.setAuthorizedUpdate("false");
-			authUser.setAuthorizedView("true");
-			authUser.setWillId(will.getWillId());
-			userService.saveAuthorizeUserToAuthTbl(authUser);
+		if(userService.verify(authorizeUser).equalsIgnoreCase("new")) {
+			authorizeUser.setUser_createdTS(new Date());
+			authorizeUser.setUser_updatedTS(new Date());
+			userService.generateKeyPairForAuthorizedUser(authorizeUser, will);
+			userService.saveAuthorizeUserToUserTbl(authorizeUser);
 		}
+		VaultUser temp = userService.getUserDetailByEmail(authorizeUser.getUserEmail());
+		authUser = new VaultAuthorizedUser();
+		authUser.setVault_userId(temp.getUserId());
+		authUser.setAuthorizedTS(new Date());
+		authUser.setAuthorizedUpdate("false");
+		authUser.setAuthorizedView("true");
+		authUser.setWillId(will.getWillId());
+		userService.saveAuthorizeUserToAuthTbl(authUser);
 	}
 
 	public VaultWillDetail getWillDetailbyUserId(VaultUser user) {
@@ -254,5 +252,10 @@ public class WillManagerService {
 		} catch (SQLException e) {
 			System.out.println("BlockManagerService:requestOwnerForWill:: SQLExeption: " + e.getMessage());
 		}
+	}
+
+	public void requestPublicKey(String userEmail, String pubKeyEmail) {
+		emailService = new EmailService();
+		emailService.sendPublicKeyToUser(userEmail, pubKeyEmail);
 	}
 }

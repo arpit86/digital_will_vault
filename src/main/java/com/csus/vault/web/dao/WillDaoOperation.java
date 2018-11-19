@@ -95,11 +95,11 @@ public class WillDaoOperation {
 				query.setBytes(4, willInfo.getWillContent());
 				query.setString(5, willInfo.getWillHash());
 				query.executeUpdate();
-				query = conn.prepareStatement("update vault_will_detail SET will_updatedTS=now(), will_content=?, will_hash=? where vault_userId=?");
-				query.setBytes(1, encryptedData);
-				query.setString(2, willHash);
-				query.setInt(4, user.getUserId());
-				query.executeUpdate();
+				PreparedStatement query1 = conn.prepareStatement("update vault_will_detail SET will_updatedTS=now(), will_content=?, will_hash=? where vault_userId=?");
+				query1.setBytes(1, encryptedData);
+				query1.setString(2, willHash);
+				query1.setInt(3, user.getUserId());
+				query1.executeUpdate();
 				System.out.println("WillDaoOperation:saveModifiedWillToDB:: saved will: " + user.getUserEmail());
 				willInfo.setWillHash(willHash);
 				willInfo.setWillContent(encryptedData);

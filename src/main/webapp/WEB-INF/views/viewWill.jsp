@@ -4,7 +4,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>View Will from Digital Vault</title>
+<title>Welcome to Digital Vault</title>
 </head>
 <body>
 	<p>An email is sent to the Will owner to email you the will content</p>
