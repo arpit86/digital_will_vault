@@ -1,9 +1,12 @@
 package com.csus.vault.web.service;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -257,5 +260,49 @@ public class WillManagerService {
 	public void requestPublicKey(String userEmail, String pubKeyEmail) {
 		emailService = new EmailService();
 		emailService.sendPublicKeyToUser(userEmail, pubKeyEmail);
+	}
+
+	public void generateSystemToken(String userEmail, String requestorEmail, String willNo) {
+		String tokenHash = applySha256ToEncryptedWill(userEmail+requestorEmail+willNo);
+		byte[] encryptedTokenHash = encryptUploadedWillWithSystemPublicKey(tokenHash);
+		
+		String tokenFile = "SystemToken/token.txt";
+		try {
+			FileWriter fw = new FileWriter(new File(tokenFile));
+			fw.write(new String(encryptedTokenHash) + "\n");
+			fw.write(tokenHash + "\n");
+			fw.write(userEmail + "\n");
+			fw.write(requestorEmail + "\n");
+			fw.write(willNo);
+			fw.close();
+		} catch (IOException ex) {
+			System.out.println("WillManagerService:generateSystemToken:: IOException: " + ex.getMessage());
+		}
+	
+		// Send an email to owner to provide the token to the requester
+		emailService = new EmailService();
+		emailService.sendEmailToOwnerWithGeneratedSystemToken(userEmail, tokenFile, requestorEmail);
+	}
+	
+	private byte[] encryptUploadedWillWithSystemPublicKey(String tokenHash) {
+		byte[] encryptData = null;
+		try {
+			Cipher encrypt = Cipher.getInstance("RSA");
+			encrypt.init(Cipher.ENCRYPT_MODE, getPublic("System"));
+			encryptData = encrypt.doFinal(tokenHash.getBytes());
+		} catch (InvalidKeyException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: InvalidKeyException: " + ex.getMessage());
+		} catch (NoSuchAlgorithmException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: NoSuchAlgorithmException: " + ex.getMessage());
+		} catch (NoSuchPaddingException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: NoSuchPaddingException: " + ex.getMessage());
+		} catch (IllegalBlockSizeException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: IllegalBlockSizeException: " + ex.getMessage());
+		} catch (BadPaddingException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: BadPaddingException: " + ex.getMessage());
+		} catch (Exception ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: Exception: " + ex.getMessage());
+		} 
+		return encryptData;
 	}
 }

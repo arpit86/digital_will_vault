@@ -34,21 +34,29 @@ public class EmailService {
 		return session;
 	}
 	
+	private void sendMessage(MimeMessage message, Session session) {
+		try {
+			Transport transport = session.getTransport("smtp");
+			transport.connect(null,"fall2018.blockchain@gmail.com","Fall2018");
+			transport.sendMessage(message, message.getAllRecipients());
+			transport.close();
+		} catch (MessagingException ex) {
+			System.out.println("EmailService:sendMessage:: MessagingException: " + ex.getMessage());
+		}
+	}
+	
 	public void sendEmailContainingThePrivateKey(byte[] data, String email) {
 		//String receiver = email;
 		String receiver = "fall2018.blockchain@gmail.com";
 		String from = "fall2018.blockchain@gmail.com";
-		
-		System.out.println("Before the session");
 
 		// Get the session object
 		Session session = getSession();
 
 		// Save the encoded Private key to a file in format <User_email>_priv.txt
 		File file = new File("KeyPair/privateKey_" + email);
-		
-		// compose the message
 		try {
+			// compose the message
 			MimeMessage message = new MimeMessage(session);
 			message.setFrom(new InternetAddress(from));
 			message.addRecipient(Message.RecipientType.TO, new InternetAddress(receiver));
@@ -68,10 +76,7 @@ public class EmailService {
 			message.setContent(multipart);
 			
 			// Send message
-			Transport transport = session.getTransport("smtp");
-			transport.connect(null,"fall2018.blockchain@gmail.com","Fall2018");
-			transport.sendMessage(message, message.getAllRecipients());
-			transport.close();
+			sendMessage(message, session);
 			System.out.println("The email sent was:\n" + message.toString());
 		} catch (MessagingException mex) {
 			mex.printStackTrace();
@@ -111,10 +116,7 @@ public class EmailService {
 			message.setContent(multipart);
 
 			// Send message
-			Transport transport = session.getTransport("smtp");
-			transport.connect(null,"fall2018.blockchain@gmail.com","Fall2018");
-			transport.sendMessage(message, message.getAllRecipients());
-			transport.close();
+			sendMessage(message, session);
 			System.out.println("The email sent was:\n" + message.toString());
 		} catch (MessagingException mex) {
 			mex.printStackTrace();
@@ -126,13 +128,11 @@ public class EmailService {
 		String receiver = "fall2018.blockchain@gmail.com";
 		String from = "fall2018.blockchain@gmail.com";
 
-		System.out.println("Before the session");
-
 		// Get the session object
 		Session session = getSession();
 
-		// compose the message
 		try {
+			// compose the message
 			MimeMessage message = new MimeMessage(session);
 			message.setFrom(new InternetAddress(from));
 			message.addRecipient(Message.RecipientType.TO, new InternetAddress(receiver));
@@ -141,10 +141,7 @@ public class EmailService {
 					+ "\n IMPORTANT NOTE:  Please provide the user with the will content on email: " + user.getUserEmail());
 
 			// Send message
-			Transport transport = session.getTransport("smtp");
-			transport.connect(null,"fall2018.blockchain@gmail.com","Fall2018");
-			transport.sendMessage(message, message.getAllRecipients());
-			transport.close();
+			sendMessage(message, session);
 			System.out.println("The email sent was:\n" + message.toString());
 		} catch (MessagingException mex) {
 			mex.printStackTrace();
@@ -156,22 +153,20 @@ public class EmailService {
 		String receiver = "fall2018.blockchain@gmail.com";
 		String from = "fall2018.blockchain@gmail.com";
 
-		System.out.println("Before the session");
-
 		// Get the session object
 		Session session = getSession();
 
 		// Save the encoded Private key to a file in format <User_email>_priv.txt
 		File file = new File("KeyPair/publicKey_" + pubKeyEmail);
 
-		// compose the message
 		try {
+			// compose the message
 			MimeMessage message = new MimeMessage(session);
 			message.setFrom(new InternetAddress(from));
 			message.addRecipient(Message.RecipientType.TO, new InternetAddress(receiver));
 			message.setSubject("Welcome to Digital Vault");
-			message.setText("Please save the attached file conataining the Public Key for email address: "+pubKeyEmail);
-			// Attaching the file containing encoded Private key
+			message.setText("Please save the attached file conataining the Public Key for email address: "+ pubKeyEmail);
+			// Attaching the file containing encoded Public key
 			MimeBodyPart mBodyPart = new MimeBodyPart();
 			Multipart multipart = new MimeMultipart();
 			mBodyPart = new MimeBodyPart();
@@ -182,10 +177,40 @@ public class EmailService {
 			message.setContent(multipart);
 
 			// Send message
-			Transport transport = session.getTransport("smtp");
-			transport.connect(null,"fall2018.blockchain@gmail.com","Fall2018");
-			transport.sendMessage(message, message.getAllRecipients());
-			transport.close();
+			sendMessage(message, session);
+			System.out.println("The email sent was:\n" + message.toString());
+		} catch (MessagingException mex) {
+			mex.printStackTrace();
+		}
+	}
+
+	public void sendEmailToOwnerWithGeneratedSystemToken(String userEmail, String tokenFile, String requestorEmail) {
+		// String receiver = userEmail;
+		String receiver = "fall2018.blockchain@gmail.com";
+		String from = "fall2018.blockchain@gmail.com";
+
+		// Get the session object
+		Session session = getSession();
+
+		File file = new File(tokenFile);
+		try {
+			// compose the message
+			MimeMessage message = new MimeMessage(session);
+			message.setFrom(new InternetAddress(from));
+			message.addRecipient(Message.RecipientType.TO, new InternetAddress(receiver));
+			message.setSubject("Welcome to Digital Vault");
+			message.setText("Please send the attached file conataining the System Token to view Will for email address: "+ requestorEmail);
+			MimeBodyPart mBodyPart = new MimeBodyPart();
+			Multipart multipart = new MimeMultipart();
+			mBodyPart = new MimeBodyPart();
+			DataSource source = new FileDataSource(file);
+			mBodyPart.setDataHandler(new DataHandler(source));
+			mBodyPart.setFileName("SystemToken_"+ requestorEmail);
+			multipart.addBodyPart(mBodyPart);
+			message.setContent(multipart);
+
+			// Send message
+			sendMessage(message, session);
 			System.out.println("The email sent was:\n" + message.toString());
 		} catch (MessagingException mex) {
 			mex.printStackTrace();
