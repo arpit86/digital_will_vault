@@ -114,7 +114,8 @@ public class MainController {
 		ModelAndView mv = new ModelAndView("mainPage");
 		VaultUser user = (VaultUser) session.getAttribute("user");
 		if (!requestorEmail.isEmpty() && !willNo.isEmpty()) {
-			// to be written
+			willService = new WillManagerService();
+			willService.generateSystemToken(user.getUserEmail(), requestorEmail, willNo);
 		} else {
 			String error = null;
 			mv = new ModelAndView("error", error,"Invalid Input. Try again.");
