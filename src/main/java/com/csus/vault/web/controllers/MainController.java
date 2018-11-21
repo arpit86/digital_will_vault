@@ -122,4 +122,33 @@ public class MainController {
 		}
 		return mv;
 	}
+	
+	@RequestMapping(value = "/verifyToken", method = RequestMethod.GET)
+	public ModelAndView viewVerifyToken(HttpSession session, HttpServletResponse response) throws IOException {
+		return new ModelAndView("verifyToken");
+	}
+	
+	@RequestMapping(value = "/processVerifyToken", method = RequestMethod.POST)
+	public ModelAndView verifyUploadedToken(HttpSession session, HttpServletResponse response,
+			@RequestParam("file") MultipartFile file) {
+		ModelAndView mv = new ModelAndView("renderWill");
+		VaultUser user = (VaultUser) session.getAttribute("user");
+		PeerConnectionService peer = (PeerConnectionService) session.getAttribute("peer");
+		willService = new WillManagerService();
+		String isValid = null;
+		if (!file.isEmpty()) {
+			isValid = willService.verifySystemToken(file, user);
+		} else {
+			String error = null;
+			mv = new ModelAndView("error", error,"Invalid Input. Try again.");
+		}
+		if(isValid.contains("success")) {
+			String[] resultData = isValid.split(":");
+			String willData = willService.getWillDetailbyWillId(resultData[1], resultData[2], user, peer);
+			mv = new ModelAndView("renderWill", "willData", willData);
+		} else {
+			mv = new ModelAndView("notAuthorized");;
+		}
+		return mv;
+	}
 }
