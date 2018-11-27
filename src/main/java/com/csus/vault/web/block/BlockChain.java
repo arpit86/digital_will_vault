@@ -52,7 +52,7 @@ public class BlockChain {
 		}
 		else
 		{
-			if(bobj.getPreviousHash().equals(currentBlock.getHash()))
+			if(!currentBlock.getHash().equals(bobj.getPreviousHash()))
 			{
 				System.out.println("previous hash: " + bobj.getPreviousHash()+" , current block hash: "+ currentBlock.getHash());
 				return 2; // hash of current block does not match the prevhash of received block.

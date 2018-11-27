@@ -55,7 +55,6 @@ public class PeerConnectionService {
 				transactionDataWriter = p.getObjectOutputStream();
 			} while(transactionDataWriter==null);
 				transactionDataWriter.writeObject(T);
-				//transactionDataWriter.flush();
 			} catch (IOException io) {
 				io.printStackTrace();
 			}
@@ -68,7 +67,6 @@ public class PeerConnectionService {
 		for (Transaction t : transactionPool) {
 				System.out.println(email +" sending transaction "+ t + " from pool to new peer "+ peerList.get(peerIndex).getEmail());
 				transactionDataWriter.writeObject(t);
-				//transactionDataWriter.flush();
 				}
 		} catch (IOException io) {
 			io.printStackTrace();
@@ -81,7 +79,6 @@ public class PeerConnectionService {
 			for (BlockStructure b : blockChain.getBlockList()) {
 				System.out.println(email +" sending block "+ b + " from blockchain to new peer "+ peerList.get(peerIndex).getEmail());
 				BlockDataWriter.writeObject(b);	
-				//BlockDataWriter.flush();
 				}
 		} catch (IOException io) {
 			io.printStackTrace();
@@ -137,7 +134,6 @@ public class PeerConnectionService {
 					peerInfo.setEmail(peerEmail);
 					// get the peer's port number
 					peerInfo.setPort(Integer.parseInt(peerPort));
-					// peerInfo.setSocket(peerSocket);
 					peerList.add(peerInfo);
 					data = inReader.readLine();
 					System.out.println("received next peer's email or end from server");
@@ -158,7 +154,6 @@ public class PeerConnectionService {
 			for (PeerInfo p : peerList) {
 				Socket peerSocket = new Socket("127.0.0.1", p.getPort());
 				ObjectOutputStream ObjectWriter = new ObjectOutputStream(peerSocket.getOutputStream());
-				//outWriter = new PrintWriter(peerSocket.getOutputStream(), true);
 				ObjectWriter.writeUTF(email);
 				p.setSocket(peerSocket);				
 				ObjectInputStream ObjectReader = new ObjectInputStream(new BufferedInputStream(peerSocket.getInputStream()));
@@ -261,9 +256,7 @@ public class PeerConnectionService {
 			public void run() {
 				try {
 				// keep listening for incoming connections
-					//ObjectInputStream ObjectReader = new ObjectInputStream(new BufferedInputStream(peerList.get(Integer.parseInt(getName())).getSocket().getInputStream()));
 				ObjectInputStream ObjectReader = peerList.get(Integer.parseInt(getName())).getObjectInputStream();
-				int result = 0;
 				while (true) {
 					if (isMiner) {
 						System.out.println(email+" listening for incoming transactions from peer " + peerList.get(Integer.parseInt(getName())).getEmail());
@@ -289,12 +282,9 @@ public class PeerConnectionService {
 									for (Transaction t : transactionPool) {
 										block.addTransactionToBlock(t);
 									}
-									//already setting timestamp in constructor
-									//block.setTimeStamp(new Timestamp(System.currentTimeMillis()));
 									setBlockHash(block);
 									blockChain.acceptIncomingBlock(block);
 									UpdateBlockChainFile(block);
-									//blockChain.verifyBlockChain(block.getPreviousHash());
 									System.out.println("miner Waiting for 10 seconds before broadcasting block");
 									Thread.sleep(10000);
 									// broadcast the block to all peers.
@@ -305,7 +295,6 @@ public class PeerConnectionService {
 											DataObjectWriter = p.getObjectOutputStream();
 										} while(DataObjectWriter==null);										
 										DataObjectWriter.writeObject(block);
-										//DataObjectWriter.flush();
 									}
 									// delete transactions from pool
 									transactionPool.clear();
@@ -449,7 +438,6 @@ public class PeerConnectionService {
 						// create a peer object to store this peer's data
 						PeerInfo peer = new PeerInfo();
 						peer.setEmail(data);
-						//ObjectInputStream ObjectReader = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
 						// get the peer's port number from socket
 						peer.setPort(socket.getPort());
 						peer.setSocket(socket);
