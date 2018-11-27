@@ -1,12 +1,13 @@
 package com.csus.vault.web.service;
 
-import java.io.BufferedWriter;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -268,13 +269,13 @@ public class WillManagerService {
 		
 		String tokenFile = "SystemToken/token.txt";
 		try {
-			FileWriter fw = new FileWriter(new File(tokenFile));
-			fw.write(new String(encryptedTokenHash) + "\n");
-			fw.write(tokenHash + "\n");
-			fw.write(userEmail + "\n");
-			fw.write(requestorEmail + "\n");
-			fw.write(willNo);
-			fw.close();
+			FileWriter writer = new FileWriter(new File(tokenFile));
+			writer.write(new String(encryptedTokenHash) + "\n");
+			writer.write(tokenHash + "\n");
+			writer.write(userEmail + "\n");
+			writer.write(requestorEmail + "\n");
+			writer.write(willNo);
+			writer.close();
 		} catch (IOException ex) {
 			System.out.println("WillManagerService:generateSystemToken:: IOException: " + ex.getMessage());
 		}
@@ -304,5 +305,73 @@ public class WillManagerService {
 			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: Exception: " + ex.getMessage());
 		} 
 		return encryptData;
+	}
+
+	public String verifySystemToken(MultipartFile file, VaultUser user) {
+		String isValid = "failed";
+		try {
+			FileReader reader = new FileReader(file.getName());
+			BufferedReader buffReader = new BufferedReader(reader);
+			String encryptedTokenHash = buffReader.readLine();
+			String tokenHash = buffReader.readLine();
+			String userEmail = buffReader.readLine();
+			String requestorEmail = buffReader.readLine();
+			String willNo = buffReader.readLine();
+			buffReader.close();
+			if(!userEmail.isEmpty() && !requestorEmail.isEmpty() && !willNo.isEmpty()) {
+				String calculateTokenHash = applySha256ToEncryptedWill(userEmail+requestorEmail+willNo);
+				if(tokenHash.equals(calculateTokenHash)) {
+					isValid = "success:"+willNo+":"+userEmail;
+				} else {
+					String decryptedHash = decryptTokenHashWithSystemPrivateKey(encryptedTokenHash.getBytes());
+					if(tokenHash.equals(decryptedHash))
+						isValid = "success:"+willNo+":"+userEmail;
+				}
+			}
+		} catch (FileNotFoundException ex) {
+			System.out.println("WillManagerService:verifySystemToken:: FileNotFoundException: " + ex.getMessage());
+		} catch (IOException ex) {
+			System.out.println("WillManagerService:verifySystemToken:: IOException: " + ex.getMessage());
+		}
+		return isValid;
+	}
+	
+	public String decryptTokenHashWithSystemPrivateKey(byte[] encryptData) {
+		byte[] originalData = null;
+		try {
+			Cipher decrypt = Cipher.getInstance("RSA");
+			decrypt.init(Cipher.DECRYPT_MODE, getPrivate("System"));
+			originalData = decrypt.doFinal(encryptData);
+		} catch (InvalidKeyException ex) {
+			System.out.println("WillManagerService:decryptTokenHashWithSystemPrivateKey:: InvalidKeyException: " + ex.getMessage());
+		} catch (NoSuchAlgorithmException ex) {
+			System.out.println("WillManagerService:decryptTokenHashWithSystemPrivateKey:: NoSuchAlgorithmException: " + ex.getMessage());
+		} catch (NoSuchPaddingException ex) {
+			System.out.println("WillManagerService:decryptTokenHashWithSystemPrivateKey:: NoSuchPaddingException: " + ex.getMessage());
+		} catch (IllegalBlockSizeException ex) {
+			System.out.println("WillManagerService:decryptTokenHashWithSystemPrivateKey:: IllegalBlockSizeException: " + ex.getMessage());
+		} catch (BadPaddingException ex) {
+			System.out.println("WillManagerService:decryptTokenHashWithSystemPrivateKey:: BadPaddingException: " + ex.getMessage());
+		} catch (Exception ex) {
+			System.out.println("WillManagerService:decryptTokenHashWithSystemPrivateKey:: Exception: " + ex.getMessage());
+		}
+		return new String(originalData);
+	}
+
+	public String getWillDetailbyWillId(String willNo, String ownerEmail, VaultUser user, PeerConnectionService peer) {
+		String willData = null;
+		try {
+			willDao = new WillDaoOperation();
+			VaultWillDetail willDetail = willDao.getWillDetailbyWillId(Integer.parseInt(willNo));
+			byte[] decryptedData = decryptWillDataWithSymKey(willDetail.getWillContent(), ownerEmail);
+			willData = new String(decryptedData, "UTF-8");
+			blockService = new BlockManagerService();
+			blockService.createBlockWithWillViewedTransaction(willDetail.getWillId(), user.getUserId(), peer);
+		} catch (SQLException e) {
+			System.out.println("BlockManagerService:getWillDetailbyWillId:: SQLExeption: " + e.getMessage());
+		} catch (UnsupportedEncodingException e) {
+			System.out.println("BlockManagerService:getWillDetailbyWillId:: UnsupportedEncodingException: " + e.getMessage());
+		}
+		return willData;
 	}
 }
