@@ -3,21 +3,13 @@ package com.csus.vault.web.service;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.file.Files;
 import java.security.InvalidKeyException;
-import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -26,10 +18,10 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.csus.key.service.KeyManager;
 import com.csus.vault.web.dao.WillDaoOperation;
 import com.csus.vault.web.model.VaultAuthorizedUser;
 import com.csus.vault.web.model.VaultUser;
@@ -40,6 +32,7 @@ public class WillManagerService {
 	private WillDaoOperation willDao = null;
 	private BlockManagerService blockService = null;
 	private EmailService emailService = null;
+	private KeyManager keyManager = null;
 	//private PeerConnectionService peer;
 	
 	public void upload(MultipartFile file, VaultUser user, PeerConnectionService peer) {
@@ -52,7 +45,9 @@ public class WillManagerService {
 			
 			// Saving the encrypted will to database
 			willDao = new WillDaoOperation();
-			willDao.saveEncryptedWillToDB(encryptedData, user, willHash, peer);
+			VaultWillDetail will = willDao.saveEncryptedWillToDB(encryptedData, user, willHash);
+			blockService = new BlockManagerService();
+			blockService.createBlockWithWillUploadTransaction(will, peer);
 		} catch(IOException io) {
 			System.out.println("WillManagerService:upload:: Exeption: " + io.getMessage());
 		} catch (SQLException ex) {
@@ -79,77 +74,27 @@ public class WillManagerService {
 	}
 	
 	/*
-	 * Obtain the private key from the file uploaded by the user.
-	 */
-	public PrivateKey getPrivate(String userEmail) throws Exception {
-        byte[] keyBytes = Files.readAllBytes(new File("KeyPair/privateKey_" + userEmail).toPath());
-        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePrivate(spec);
-    }
-
-	/*
-	 * Obtain the public key associated with the email of the user.
-	 */
-    public PublicKey getPublic(String userEmail) throws Exception {
-        byte[] keyBytes = Files.readAllBytes(new File("KeyPair/publicKey_" + userEmail).toPath());
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePublic(spec);
-    }
-	
-    public SecretKeySpec getSecretKey(String userEmail) throws IOException{
-        byte[] keyBytes = Files.readAllBytes(new File("SecretKey/symKey_"+ userEmail).toPath());
-        return new SecretKeySpec(keyBytes, "AES");
-    }
-    
-    public void generateSecretKey(String userEmail) {
-    	SecureRandom rnd = new SecureRandom();
-        byte [] key = new byte [16];
-        rnd.nextBytes(key);
-        SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
-        writeToFile("SecretKey/symKey_"+ userEmail, secretKey.getEncoded());
-    }
-    
-    /*
-	 *  This function writes the byte[] data to the file path provided.
-	 */
-	private void writeToFile(String path, byte[] key) {
-		try {
-			File f = new File(path);
-			f.getParentFile().mkdirs();
-			FileOutputStream fos = new FileOutputStream(f);
-			fos.write(key);
-	        fos.flush();
-	        fos.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	/*
 	 *  This function will encrypt the uploaded will text with user's public key.
 	 */
 	private byte[] encryptUploadedWillWithSymKey(byte[] willData, String userEmail) {
 		byte[] encryptData = null;
 		try {
 			Cipher encrypt = Cipher.getInstance("AES");
-			encrypt.init(Cipher.ENCRYPT_MODE, getSecretKey(userEmail));
+			keyManager = new KeyManager();
+			encrypt.init(Cipher.ENCRYPT_MODE, keyManager.getSecretKey(userEmail));
 			encryptData = encrypt.doFinal(willData);
 		} catch (InvalidKeyException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: InvalidKeyException: " + ex.getMessage());
+			System.out.println("WillManagerService:encryptUploadedWillWithSymKey:: InvalidKeyException: " + ex.getMessage());
 		} catch (NoSuchAlgorithmException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: NoSuchAlgorithmException: " + ex.getMessage());
+			System.out.println("WillManagerService:encryptUploadedWillWithSymKey:: NoSuchAlgorithmException: " + ex.getMessage());
 		} catch (NoSuchPaddingException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: NoSuchPaddingException: " + ex.getMessage());
+			System.out.println("WillManagerService:encryptUploadedWillWithSymKey:: NoSuchPaddingException: " + ex.getMessage());
 		} catch (IllegalBlockSizeException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: IllegalBlockSizeException: " + ex.getMessage());
+			System.out.println("WillManagerService:encryptUploadedWillWithSymKey:: IllegalBlockSizeException: " + ex.getMessage());
 		} catch (BadPaddingException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: BadPaddingException: " + ex.getMessage());
+			System.out.println("WillManagerService:encryptUploadedWillWithSymKey:: BadPaddingException: " + ex.getMessage());
 		} catch (Exception ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: Exception: " + ex.getMessage());
+			System.out.println("WillManagerService:encryptUploadedWillWithSymKey:: Exception: " + ex.getMessage());
 		} 
 		return encryptData;
 	}
@@ -158,7 +103,8 @@ public class WillManagerService {
 		byte[] originalData = null;
 		try {
 			Cipher decrypt = Cipher.getInstance("AES");
-			decrypt.init(Cipher.DECRYPT_MODE, getSecretKey(userEmail));
+			keyManager = new KeyManager();
+			decrypt.init(Cipher.DECRYPT_MODE, keyManager.getSecretKey(userEmail));
 			originalData = decrypt.doFinal(encryptData);
 		} catch (InvalidKeyException ex) {
 			System.out.println("WillManagerService:decryptWillDataWithPrivateKey:: InvalidKeyException: " + ex.getMessage());
@@ -205,15 +151,17 @@ public class WillManagerService {
 		UserService userService = new UserService();
 		VaultAuthorizedUser authUser = null;
 		if(userService.verify(authorizeUser).equalsIgnoreCase("new")) {
-			authorizeUser.setUser_createdTS(new Date());
-			authorizeUser.setUser_updatedTS(new Date());
-			userService.generateKeyPairForAuthorizedUser(authorizeUser, will);
-			userService.saveAuthorizeUserToUserTbl(authorizeUser);
+			KeyManager keyManager = new KeyManager();
+			try {
+				authorizeUser.setUser_publicKey(keyManager.generateKeyPairForAuthorizedUser(authorizeUser.getUserEmail(), will.getWillId()));
+				userService.saveAuthorizeUserToUserTbl(authorizeUser);
+			} catch (NoSuchAlgorithmException e) {
+				System.out.println("WillManagerService:addAuthorizedWillUser:: NoSuchAlgorithmException: " + e.getMessage());
+			}
 		}
 		VaultUser temp = userService.getUserDetailByEmail(authorizeUser.getUserEmail());
 		authUser = new VaultAuthorizedUser();
 		authUser.setVault_userId(temp.getUserId());
-		authUser.setAuthorizedTS(new Date());
 		authUser.setAuthorizedUpdate("false");
 		authUser.setAuthorizedView("true");
 		authUser.setWillId(will.getWillId());
@@ -231,8 +179,8 @@ public class WillManagerService {
 		return willDetail;
 	}
 
-	public ArrayList<Integer> getListOfWillWithViewAccess(VaultUser user) {
-		ArrayList<Integer> willList = new ArrayList<Integer>();
+	public ArrayList<String> getListOfWillWithViewAccess(VaultUser user) {
+		ArrayList<String> willList = new ArrayList<String>();
 		try {
 			willDao = new WillDaoOperation();
 			willList = willDao.getListOfWillWithViewAccess(user);
@@ -242,17 +190,17 @@ public class WillManagerService {
 		return willList;
 	}
 
-	public void requestOwnerForWill(VaultUser user, int willId) {
+	public void requestOwnerForWill(VaultUser user, String willOwnerName) {
 		willDao = new WillDaoOperation();
 		try {
-			String ownerEmail = willDao.requestOwnerForWill(user, willId);
+			String ownerData = willDao.requestOwnerForWill(user, willOwnerName);
+			String[] ownerInfo = ownerData.split(":");
+			String ownerEmail = ownerInfo[0];
+			String willId = ownerInfo[1];
 			
 			// Send an email to user with private key to the user email
 			emailService = new EmailService();
 			emailService.sendEmailToOwnerToSendWillContentToRequestor(ownerEmail, user, willId);
-			
-			//blockService = new BlockManagerService();
-			//blockService.createBlockWithWillViewedTransaction(willId, user.getUserId(), peer);
 		} catch (SQLException e) {
 			System.out.println("BlockManagerService:requestOwnerForWill:: SQLExeption: " + e.getMessage());
 		}
@@ -265,44 +213,71 @@ public class WillManagerService {
 
 	public void generateSystemToken(String userEmail, String requestorEmail, String willNo) {
 		String tokenHash = applySha256ToEncryptedWill(userEmail+requestorEmail+willNo);
-		byte[] encryptedTokenHash = encryptUploadedWillWithSystemPublicKey(tokenHash);
-		
-		String tokenFile = "SystemToken/token.txt";
+		byte[] encryptedTokenHash = encryptUploadedDataWithSystemSecretKey(tokenHash);
 		try {
-			FileWriter writer = new FileWriter(new File(tokenFile));
-			writer.write(new String(encryptedTokenHash) + "\n");
-			writer.write(tokenHash + "\n");
+			KeyManager keyManager = new KeyManager();
+			byte[] encryptedSecretKey = encryptUploadedDataWithSystemPublicKey(new String(keyManager.getSecretKey(userEmail).getEncoded()));
+			FileWriter writer = new FileWriter(new File("SystemToken/token_"+requestorEmail));
+			writer.write(new String(encryptedTokenHash));
+			writer.write("\n"+new Date() + "\n");
 			writer.write(userEmail + "\n");
 			writer.write(requestorEmail + "\n");
-			writer.write(willNo);
+			writer.write(willNo + "\n");
+			writer.write(new String(encryptedSecretKey));
 			writer.close();
 		} catch (IOException ex) {
 			System.out.println("WillManagerService:generateSystemToken:: IOException: " + ex.getMessage());
+		} catch (Exception ex) {
+			System.out.println("WillManagerService:generateSystemToken:: Exception: " + ex.getMessage());
 		}
 	
 		// Send an email to owner to provide the token to the requester
 		emailService = new EmailService();
-		emailService.sendEmailToOwnerWithGeneratedSystemToken(userEmail, tokenFile, requestorEmail);
+		emailService.sendEmailToOwnerWithGeneratedSystemToken(userEmail, "SystemToken/token_"+requestorEmail, requestorEmail);
 	}
 	
-	private byte[] encryptUploadedWillWithSystemPublicKey(String tokenHash) {
+	private byte[] encryptUploadedDataWithSystemSecretKey(String tokenHash) {
+		byte[] encryptData = null;
+		try {
+			Cipher encrypt = Cipher.getInstance("AES");
+			keyManager = new KeyManager();
+			encrypt.init(Cipher.ENCRYPT_MODE, keyManager.getSecretKey("System"));
+			encryptData = encrypt.doFinal(tokenHash.getBytes());
+		} catch (InvalidKeyException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithSymKey:: InvalidKeyException: " + ex.getMessage());
+		} catch (NoSuchAlgorithmException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithSymKey:: NoSuchAlgorithmException: " + ex.getMessage());
+		} catch (NoSuchPaddingException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithSymKey:: NoSuchPaddingException: " + ex.getMessage());
+		} catch (IllegalBlockSizeException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithSymKey:: IllegalBlockSizeException: " + ex.getMessage());
+		} catch (BadPaddingException ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithSymKey:: BadPaddingException: " + ex.getMessage());
+		} catch (Exception ex) {
+			System.out.println("WillManagerService:encryptUploadedWillWithSymKey:: Exception: " + ex.getMessage());
+		} 
+		return encryptData;
+	}
+
+	private byte[] encryptUploadedDataWithSystemPublicKey(String tokenHash) {
 		byte[] encryptData = null;
 		try {
 			Cipher encrypt = Cipher.getInstance("RSA");
-			encrypt.init(Cipher.ENCRYPT_MODE, getPublic("System"));
+			keyManager = new KeyManager();
+			encrypt.init(Cipher.ENCRYPT_MODE, keyManager.getPublic("System"));
 			encryptData = encrypt.doFinal(tokenHash.getBytes());
 		} catch (InvalidKeyException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: InvalidKeyException: " + ex.getMessage());
+			System.out.println("WillManagerService:encryptUploadedDataWithSystemPublicKey:: InvalidKeyException: " + ex.getMessage());
 		} catch (NoSuchAlgorithmException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: NoSuchAlgorithmException: " + ex.getMessage());
+			System.out.println("WillManagerService:encryptUploadedDataWithSystemPublicKey:: NoSuchAlgorithmException: " + ex.getMessage());
 		} catch (NoSuchPaddingException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: NoSuchPaddingException: " + ex.getMessage());
+			System.out.println("WillManagerService:encryptUploadedDataWithSystemPublicKey: NoSuchPaddingException: " + ex.getMessage());
 		} catch (IllegalBlockSizeException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: IllegalBlockSizeException: " + ex.getMessage());
+			System.out.println("WillManagerService:encryptUploadedDataWithSystemPublicKey:: IllegalBlockSizeException: " + ex.getMessage());
 		} catch (BadPaddingException ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: BadPaddingException: " + ex.getMessage());
+			System.out.println("WillManagerService:encryptUploadedDataWithSystemPublicKey:: BadPaddingException: " + ex.getMessage());
 		} catch (Exception ex) {
-			System.out.println("WillManagerService:encryptUploadedWillWithPubKey:: Exception: " + ex.getMessage());
+			System.out.println("WillManagerService:encryptUploadedDataWithSystemPublicKey:: Exception: " + ex.getMessage());
 		} 
 		return encryptData;
 	}
@@ -310,22 +285,21 @@ public class WillManagerService {
 	public String verifySystemToken(MultipartFile file, VaultUser user) {
 		String isValid = "failed";
 		try {
-			FileReader reader = new FileReader(file.getName());
+			FileReader reader = new FileReader("SystemToken/token_" + user.getUserEmail());
 			BufferedReader buffReader = new BufferedReader(reader);
 			String encryptedTokenHash = buffReader.readLine();
-			String tokenHash = buffReader.readLine();
+			String tokenDate = buffReader.readLine();
 			String userEmail = buffReader.readLine();
 			String requestorEmail = buffReader.readLine();
 			String willNo = buffReader.readLine();
+			String encryptedSecretKey = buffReader.readLine();
 			buffReader.close();
 			if(!userEmail.isEmpty() && !requestorEmail.isEmpty() && !willNo.isEmpty()) {
 				String calculateTokenHash = applySha256ToEncryptedWill(userEmail+requestorEmail+willNo);
-				if(tokenHash.equals(calculateTokenHash)) {
+				byte[] calcEncryptedTokenHash = encryptUploadedDataWithSystemSecretKey(calculateTokenHash);
+				String hash = new String(calcEncryptedTokenHash, "UTF-8");
+				if(encryptedTokenHash.equals(hash)) {
 					isValid = "success:"+willNo+":"+userEmail;
-				} else {
-					String decryptedHash = decryptTokenHashWithSystemPrivateKey(encryptedTokenHash.getBytes());
-					if(tokenHash.equals(decryptedHash))
-						isValid = "success:"+willNo+":"+userEmail;
 				}
 			}
 		} catch (FileNotFoundException ex) {
@@ -336,11 +310,12 @@ public class WillManagerService {
 		return isValid;
 	}
 	
-	public String decryptTokenHashWithSystemPrivateKey(byte[] encryptData) {
+	public String decryptTokenHashWithSystemSecretKey(byte[] encryptData) {
 		byte[] originalData = null;
 		try {
-			Cipher decrypt = Cipher.getInstance("RSA");
-			decrypt.init(Cipher.DECRYPT_MODE, getPrivate("System"));
+			Cipher decrypt = Cipher.getInstance("AES");
+			keyManager = new KeyManager();
+			decrypt.init(Cipher.DECRYPT_MODE, keyManager.getSecretKey("System"));
 			originalData = decrypt.doFinal(encryptData);
 		} catch (InvalidKeyException ex) {
 			System.out.println("WillManagerService:decryptTokenHashWithSystemPrivateKey:: InvalidKeyException: " + ex.getMessage());

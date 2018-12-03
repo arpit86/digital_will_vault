@@ -6,7 +6,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -15,7 +14,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -348,7 +346,7 @@ public class PeerConnectionService {
 		BufferedWriter bw = null;
 		FileWriter fw = null;
 		String s;
-		File file = new File(email+"_blockchain.txt");
+		File file = new File("Blockchain/"+email+"_blockchain.txt");
 		if (!file.exists()) {
 			file.createNewFile();
 		}

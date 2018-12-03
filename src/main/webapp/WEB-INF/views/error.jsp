@@ -8,5 +8,8 @@
 </head>
 <body>
 Error: ${error}
+
+<br>
+<a href="mainPage"><input type="button" value="Home" name="home"></a>
 </body>
 </html>

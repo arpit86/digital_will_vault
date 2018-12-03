@@ -65,25 +65,25 @@ public class MainController {
 	public ModelAndView viewUploadFile(HttpSession session, HttpServletResponse response) {
 		VaultUser user = (VaultUser) session.getAttribute("user");
 		willService = new WillManagerService();
-		ArrayList willList = willService.getListOfWillWithViewAccess(user);
+		ArrayList<String> willList = willService.getListOfWillWithViewAccess(user);
 		return new ModelAndView("selectWillToView", "willList", willList);
 	}
 	
 	@RequestMapping(value = "/viewWill", method = RequestMethod.POST)
 	public ModelAndView getPrivateKey(HttpSession session, HttpServletResponse response,
-	  @RequestParam("willId") int willId) {
+	  @RequestParam("willOwnerName") String willOwnerName) {
 		ModelAndView mv = new ModelAndView("viewWill");
 		VaultUser user = (VaultUser) session.getAttribute("user");
-		if (willId != 0) {
+		if (!willOwnerName.isEmpty()) {
 			willService = new WillManagerService();
-			willService.requestOwnerForWill(user, willId);
+			willService.requestOwnerForWill(user, willOwnerName);
 		} else {
 			mv = new ModelAndView("error", "error", "The Will ID selected is invalid.");
 		}
 		return mv;
 	}
 	
-	@RequestMapping(value = "/requestPublicKey", method = RequestMethod.GET)
+	/*@RequestMapping(value = "/requestPublicKey", method = RequestMethod.GET)
 	public ModelAndView viewRequestPublicKey(HttpSession session, HttpServletResponse response) throws IOException {
 		return new ModelAndView("requestPublicKey");
 	}
@@ -101,7 +101,7 @@ public class MainController {
 			mv = new ModelAndView("error", error,"Invalid Input. Try again.");
 		}
 		return mv;
-	}
+	}*/
 	
 	@RequestMapping(value = "/generateToken", method = RequestMethod.GET)
 	public ModelAndView viewGenerateToken(HttpSession session, HttpServletResponse response) throws IOException {
@@ -147,7 +147,7 @@ public class MainController {
 			String willData = willService.getWillDetailbyWillId(resultData[1], resultData[2], user, peer);
 			mv = new ModelAndView("renderWill", "willData", willData);
 		} else {
-			mv = new ModelAndView("notAuthorized");;
+			mv = new ModelAndView("error", "error", "Error while reading the file");
 		}
 		return mv;
 	}

@@ -8,5 +8,6 @@
 </head>
 <body>
 	<h3>Not an Authorized Action!</h3>
+	<a href="mainPage"><input type="button" value="Home" name="home"></a>
 </body>
 </html>

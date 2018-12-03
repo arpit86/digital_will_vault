@@ -10,8 +10,8 @@
     
     <body>
     	<img alt="no image" src="<c:url value="/images/header.png"/>" align="middle"/>
-    	<br/>
-    	<br/>	
+    	<br>
+    	<br>	
 	    <form:form id="registerForm" modelAttribute="user" action="registerProcess" method="post">
 	        <table>
 	            <tr>

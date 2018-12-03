@@ -29,12 +29,12 @@ public class UserDaoOperation {
             	PreparedStatement query = conn.prepareStatement("select * from vault_user where user_email = ?");
             	query.setString(1, user.getUserEmail());
             	ResultSet rs = query.executeQuery();
-            	if(rs.getFetchSize() < 0) {
+            	if(rs.isBeforeFirst()) {
             		while(rs.next()) {
             			if(rs.getString("user_email").equalsIgnoreCase(user.getUserEmail())){
             				System.out.println("UserDaoOperation:verify:: user already present in database.");
             				isPresent = "exist";
-            				if(rs.getString("user_password").isEmpty()) {
+            				if(null == rs.getString("user_password")) {
             					System.out.println("UserDaoOperation:verify:: user already present in database but is an authorized user");
             					isPresent="authorizeUser";
             				}

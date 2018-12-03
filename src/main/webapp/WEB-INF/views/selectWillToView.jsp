@@ -7,30 +7,30 @@
         <title>Welcome to Digital Vault</title>
     </head>
     <body>
-	    <t3>Welcome to your Personal Vault ${name}</t3>
-        
-        <br/>
-        <p> 
-        	<br/>Please select the Will below to View:
-        	<br/><span style="color:red;">Once you select the Will you wish to view, an email is sent to the owner to provide you the access token via email.</span> 
+    	<img alt="no image" src="<c:url value="/images/header.png"/>" align="middle" />
+		<br>
+	    <p> 
+        	Please select the Will below to View:
+        	<br><span style="color:red;"><em>Once you select the Will you wish to view, an email is sent to the owner to provide you the access token via email.</em></span> 
         </p>
-        <br/>
+        <br>
         <form action = "viewWill" method = "post">
         	<table border="0">
-				<th> Will Number </th>
 				<tr>
+					<td>Will Owner Name:</td>
 					<td>
-					<select name ="willId">
-               			<c:forEach var="willId" items="${willList}">
-               		   		<option value="${willId}">${willId}</option>
+					<select name ="willOwnerName">
+               			<c:forEach var="willOwnerName" items="${willList}">
+               		   		<option value="${willOwnerName}">${willOwnerName}</option>
                		   	</c:forEach>
 					</select>
 					</td>
 				</tr>
 				<tr>
 					<td>
-						<input="input type = "submit" value = "View Will" />
+						<input type = "submit" value = "View Will" />
 					</td>
+					<td><a href="mainPage"><input type="button" value="Cancel" name="cancel"></a>
 				</tr>
         	</table>
         </form>

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.csus.key.service.KeyManager;
 import com.csus.vault.web.model.VaultUser;
 import com.csus.vault.web.model.VaultWillDetail;
 import com.csus.vault.web.service.PeerConnectionService;
@@ -36,7 +37,8 @@ public class UploadController {
 		PeerConnectionService peer = (PeerConnectionService) session.getAttribute("peer");
 		if (!file.isEmpty()) {
 			willService = new WillManagerService();
-			willService.generateSecretKey(user.getUserEmail());
+			KeyManager keyManager = new KeyManager();
+			keyManager.generateSecretKey(user.getUserEmail());
 			willService.upload(file, user, peer);
 			VaultWillDetail will = willService.getWillDetailbyUserId(user);
 			session.setAttribute("will", will);

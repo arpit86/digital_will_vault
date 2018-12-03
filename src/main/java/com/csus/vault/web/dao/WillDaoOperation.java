@@ -22,7 +22,8 @@ public class WillDaoOperation {
 	 *  This function will save the encrypted will to the database and
 	 *  add user to vault_authorized_user table with update and view rights for the will.
 	 */
-	public void saveEncryptedWillToDB(byte[] encryptedData, VaultUser user, String willHash, PeerConnectionService peer) throws SQLException {
+	public VaultWillDetail  saveEncryptedWillToDB(byte[] encryptedData, VaultUser user, String willHash) throws SQLException {
+		VaultWillDetail willInfo = new VaultWillDetail();
 		conn = jdbcConn.getConnection();
 		if(conn != null && encryptedData != null) {
 			System.out.println("WillDaoOperation:saveEncryptedWillToDB:: inside saveEncryptedWillToDB()");
@@ -34,17 +35,31 @@ public class WillDaoOperation {
 				query.setString(3, willHash);
 	            query.executeUpdate();
 	            System.out.println("WillDaoOperation:saveEncryptedWillToDB:: saved will: " + user.getUserEmail());
-				VaultWillDetail willInfo = getWillDetailbyUserId(user.getUserId());
+				willInfo = getWillDetailbyUserId(user.getUserId());
 				if(null != willInfo) {
-					query = conn.prepareStatement("insert into vault_authorized_user(will_id, vault_userId, authorizedTS, authorized_view, " + 
-							"authorized_update) values (?, ?, now(), ?, ?)");
-					query.setInt(1, willInfo.getWillId());
-					query.setInt(2, user.getUserId());
-					query.setString(3, "true");
-					query.setString(4, "true");
-                	query.executeUpdate();
-                	query.close();
+					addAuthorizedUserToDb(willInfo.getWillId(), user.getUserId());
                 }
+			} catch (Exception ex) {
+            	System.out.println("WillDaoOperation:saveEncryptedWillToDB:: Unable to save the Will Record: Exception: "+ ex.getMessage());
+            } finally {
+            	conn.close();
+			}
+		}
+		return willInfo;
+	}
+
+	private void addAuthorizedUserToDb(int will_id, int user_id) throws SQLException {
+		conn = jdbcConn.getConnection();
+		if(conn != null) {
+			System.out.println("WillDaoOperation:addAuthorizedUserToDb:: inside addAuthorizedUserToDb()");
+			try {
+				PreparedStatement query = conn.prepareStatement("insert into vault_authorized_user(will_id, vault_userId, authorizedTS, authorized_view, " 
+																+ "authorized_update) values (?, ?, now(), ?, ?)");
+				query.setInt(1, will_id);
+				query.setInt(2, user_id);
+				query.setString(3, "true");
+				query.setString(4, "true");
+				query.executeUpdate();
 			} catch (Exception ex) {
             	System.out.println("WillDaoOperation:saveEncryptedWillToDB:: Unable to save the Will Record: Exception: "+ ex.getMessage());
             } finally {
@@ -82,11 +97,11 @@ public class WillDaoOperation {
 	}
 
 	public void saveModifiedWillToDB(byte[] encryptedData, VaultUser user, String willHash, PeerConnectionService peer) throws SQLException {
+		VaultWillDetail willInfo = getWillDetailbyUserId(user.getUserId());
 		conn = jdbcConn.getConnection();
 		if(conn != null && encryptedData != null) {
 			System.out.println("WillDaoOperation:saveEncryptedWillToDB:: inside saveEncryptedWillToDB()");
 			try {
-				VaultWillDetail willInfo = getWillDetailbyUserId(user.getUserId());
 				PreparedStatement query = conn.prepareStatement("insert into vault_will_detail_history (will_id, vault_userId, will_createdTS, " + 
 						"will_updatedTS, will_content, will_hash) values (?, ?, ?, now(), ?, ?)");
 				query.setInt(1, willInfo.getWillId());
@@ -95,37 +110,51 @@ public class WillDaoOperation {
 				query.setBytes(4, willInfo.getWillContent());
 				query.setString(5, willInfo.getWillHash());
 				query.executeUpdate();
-				PreparedStatement query1 = conn.prepareStatement("update vault_will_detail SET will_updatedTS=now(), will_content=?, will_hash=? where vault_userId=?");
-				query1.setBytes(1, encryptedData);
-				query1.setString(2, willHash);
-				query1.setInt(3, user.getUserId());
-				query1.executeUpdate();
+				updateWillInDB(encryptedData, user, willHash, peer);
 				System.out.println("WillDaoOperation:saveModifiedWillToDB:: saved will: " + user.getUserEmail());
 				willInfo.setWillHash(willHash);
 				willInfo.setWillContent(encryptedData);
 				willInfo.setWill_updatedTS(new Date());
+				blockService = new BlockManagerService();
 				blockService.createBlockWithWillUpdateTransaction(willInfo, peer);
             } catch (Exception ex) {
             	System.out.println("WillDaoOperation:saveModifiedWillToDB:: Unable to save the Will Record: Exception: "+ ex.getMessage());
             } finally {
             	conn.close();
 			}
-		
 		}
 	}
 
-	public ArrayList<Integer> getListOfWillWithViewAccess(VaultUser user) throws SQLException {
-		ArrayList<Integer> willIdList = new ArrayList<>();
+	private void updateWillInDB(byte[] encryptedData, VaultUser user, String willHash, PeerConnectionService peer) throws SQLException {
+		conn = jdbcConn.getConnection();
+		if(conn != null && encryptedData != null) {
+			try {
+				PreparedStatement query = conn.prepareStatement("update vault_will_detail SET will_updatedTS=now(), will_content=?, will_hash=? where vault_userId=?");
+				query.setBytes(1, encryptedData);
+				query.setString(2, willHash);
+				query.setInt(3, user.getUserId());
+				query.executeUpdate();
+			} catch (Exception ex) {
+            	System.out.println("WillDaoOperation:updateWillInDB:: Unable to update the Will Record: Exception: "+ ex.getMessage());
+            } finally {
+            	conn.close();
+			}
+		}
+	}
+
+	public ArrayList<String> getListOfWillWithViewAccess(VaultUser user) throws SQLException {
+		ArrayList<String> willIdList = new ArrayList<>();
 		conn = jdbcConn.getConnection();
 		if(conn != null) {
 			System.out.println("WillDaoOperation:getListOfWillWithViewAccess:: inside getListOfWillWithViewAccess()");
 			try {
-				PreparedStatement query = conn.prepareStatement("select will_id from vault_authorized_user where vault_userId=? and authorized_view=?");
+				PreparedStatement query = conn.prepareStatement("select concat(user_firstname, ' ', user_lastname ) AS fullname from vault_user where user_id in "
+						+ "(select w.vault_userId from vault_will_detail w, vault_authorized_user a where a.vault_userId=? and w.will_id=a.will_id and a.authorized_view=?)");
 				query.setInt(1, user.getUserId());
 				query.setString(2, "true");
 				ResultSet rs = query.executeQuery();
 				while(rs.next()) {
-					willIdList.add(rs.getInt("will_id"));
+					willIdList.add(rs.getString(1));
 				}
 				query.close();
 			} catch (Exception ex) {
@@ -139,7 +168,7 @@ public class WillDaoOperation {
 	}
 	
 	public VaultWillDetail getWillDetailbyWillId(int willId) throws SQLException {
-		VaultWillDetail willElement = new VaultWillDetail();;
+		VaultWillDetail willElement = new VaultWillDetail();
 		conn = jdbcConn.getConnection();
 		if(conn != null) {
 			System.out.println("WillDaoOperation:getWillDetailbyWillId:: inside saveEncryptedWillToDB()");
@@ -166,18 +195,19 @@ public class WillDaoOperation {
 		return willElement;
 	}
 
-	public String requestOwnerForWill(VaultUser user, int willId) throws SQLException {
-		String ownerEmail = "";
+	public String requestOwnerForWill(VaultUser user, String willOwnerName) throws SQLException {
+		String ownerData = "";
+		VaultWillDetail willInfo = getWillDetailbyWillOwner(willOwnerName.trim());
 		conn = jdbcConn.getConnection();
 		if(conn != null) {
 			try {
-				VaultWillDetail willInfo = getWillDetailbyWillId(willId);
-				PreparedStatement query = conn.prepareStatement("select * from vault_user where vault_userId=?");
+				PreparedStatement query = conn.prepareStatement("select * from vault_user where user_id=?");
 				query.setInt(1, willInfo.getVault_userId());
 				ResultSet rs = query.executeQuery();
 				while(rs.next()) {
-					ownerEmail = rs.getString("user_email");
+					ownerData = rs.getString("user_email");
 				}
+				ownerData = ownerData + ":" + willInfo.getWillId();
 				query.close();
 			} catch (Exception ex) {
             	System.out.println("WillDaoOperation:getListOfWillWithViewAccess:: Exception: "+ ex.getMessage());
@@ -185,6 +215,37 @@ public class WillDaoOperation {
             	conn.close();
 			}
 		}
-		return ownerEmail;
+		return ownerData;
+	}
+
+	private VaultWillDetail getWillDetailbyWillOwner(String willOwnerName) throws SQLException {
+		String firstName = willOwnerName;
+		String lastName = "";
+		if(willOwnerName.contains(" ")) {
+			String[] splitName = willOwnerName.split(" ");
+			firstName = splitName[0];
+			lastName = splitName[1];
+		}
+		VaultWillDetail willElement = new VaultWillDetail();
+		conn = jdbcConn.getConnection();
+		if(conn != null) {
+			System.out.println("WillDaoOperation:getWillDetailbyWillId:: inside saveEncryptedWillToDB()");
+			try {
+				PreparedStatement query = conn.prepareStatement("select user_id from vault_user where user_firstName=? and user_lastName=?");
+				query.setString(1, firstName);
+				query.setString(2, lastName);
+				ResultSet rs = query.executeQuery();
+				while(rs.next()) {
+					int userId = rs.getInt("user_id");
+					willElement = getWillDetailbyUserId(userId);
+				}
+				query.close();
+           } catch (Exception ex) {
+				System.out.println("WillDaoOperation:getWillDetailbyWillId:: Unable to retrieve the Will Record: Exception: "+ ex.getMessage());
+			} finally {
+            	conn.close();
+			}
+		}
+		return willElement;
 	}
 }

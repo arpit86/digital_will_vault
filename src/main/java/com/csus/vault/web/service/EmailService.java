@@ -101,7 +101,7 @@ public class EmailService {
 			MimeMessage message = new MimeMessage(session);
 			message.setFrom(new InternetAddress(from));
 			message.addRecipient(Message.RecipientType.TO, new InternetAddress(receiver));
-			message.setSubject("Welcome to Digital Vault");
+			message.setSubject("Thank you for using Digital Will Key Manager, " + userEmail);
 			message.setText("Please save the attached file securely on your computer.\n"
 					+ "IMPORTANT NOTE:  Please register to the Digital Vault Application.\n"
 					+ "YOU HAVE BEEN AUTHORIZED TO VIEW THE WILL #" + will.getWillId());
@@ -123,7 +123,7 @@ public class EmailService {
 		}
 	}
 
-	public void sendEmailToOwnerToSendWillContentToRequestor(String ownerEmail, VaultUser user, int willId) {
+	public void sendEmailToOwnerToSendWillContentToRequestor(String ownerEmail, VaultUser user, String willId) {
 		//String receiver = email;
 		String receiver = "fall2018.blockchain@gmail.com";
 		String from = "fall2018.blockchain@gmail.com";
@@ -136,7 +136,7 @@ public class EmailService {
 			MimeMessage message = new MimeMessage(session);
 			message.setFrom(new InternetAddress(from));
 			message.addRecipient(Message.RecipientType.TO, new InternetAddress(receiver));
-			message.setSubject("Welcome to Digital Vault");
+			message.setSubject("View Will Request from " + user.getUser_firstName() + " " + user.getUser_lastName());
 			message.setText("A view request was made by "+ user.getUser_firstName() + " " + user.getUser_lastName() +"for the will# "+ willId
 					+ "\n IMPORTANT NOTE:  Please provide the user with the will content on email: " + user.getUserEmail());
 
@@ -198,7 +198,7 @@ public class EmailService {
 			MimeMessage message = new MimeMessage(session);
 			message.setFrom(new InternetAddress(from));
 			message.addRecipient(Message.RecipientType.TO, new InternetAddress(receiver));
-			message.setSubject("Welcome to Digital Vault");
+			message.setSubject("Digital Vault System Token");
 			message.setText("Please send the attached file conataining the System Token to view Will for email address: "+ requestorEmail);
 			MimeBodyPart mBodyPart = new MimeBodyPart();
 			Multipart multipart = new MimeMultipart();
