@@ -25,6 +25,11 @@
 	</properties>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.cusu.key.manager</groupId>
+			<version>0.0.1-SNAPSHOT</version>
+			<artifactId>digital_will_key_manager</artifactId>
+		</dependency>
 
 		<!-- Spring -->
 		<dependency>
@@ -171,25 +176,6 @@
                 <app.web.password />
             </properties>
         </profile>
-        <profile>
-			<id>jboss-deploy</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <!-- JBoss AS plugin to deploy war -->
-                        <groupId>org.jboss.as.plugins</groupId>
-                        <artifactId>jboss-as-maven-plugin</artifactId>
-                        <version>${version.org.jboss.as.plugins.maven.plugin}</version>
-                        <configuration>
-                            <hostname>${app.web.hostname}</hostname>
-                            <port>${app.web.port}</port>
-                            <username>${app.web.username}</username>
-                            <password>${app.web.password}</password>
-                        </configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
 	</profiles>
 	<build>
    		<finalName>digital-vault-web</finalName>

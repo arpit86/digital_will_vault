@@ -9,7 +9,8 @@
 <body>
 	<img alt="no image" src="<c:url value="/images/header.png"/>" align="middle" />
 	<br>
-	<font> The will content is as follows:</font>
+	<br>
+	<p><span style="color:blue;">The will content is as follows:</span></p>
 	<br>
 	<p>${willData}</p>
     <br>

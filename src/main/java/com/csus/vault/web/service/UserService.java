@@ -53,11 +53,12 @@ public class UserService {
 		userDao = new UserDaoOperation();
 		generatePasswordHashAndSalt(user);
 		userDao.update(user);
+		VaultUser tempUser = getUserDetailByEmail(user.getUserEmail());
 		peer.connectToBootNode(user.getUserEmail());
 		//start the server listening thread
 		peer.run();
 		blockService = new BlockManagerService();
-		blockService.createBlockWithPublicKeyTransaction(user, peer);
+		blockService.createBlockWithPublicKeyTransaction(tempUser, peer);
 	}
 	
 	/*

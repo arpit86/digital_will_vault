@@ -218,12 +218,13 @@ public class WillManagerService {
 			KeyManager keyManager = new KeyManager();
 			byte[] encryptedSecretKey = encryptUploadedDataWithSystemPublicKey(new String(keyManager.getSecretKey(userEmail).getEncoded()));
 			FileWriter writer = new FileWriter(new File("SystemToken/token_"+requestorEmail));
-			writer.write(new String(encryptedTokenHash));
-			writer.write("\n"+new Date() + "\n");
+			writer.write(new String(encryptedTokenHash, "UTF-8") + "\n");
+			writer.write(tokenHash + "\n");
+			writer.write(new Date() + "\n");
 			writer.write(userEmail + "\n");
 			writer.write(requestorEmail + "\n");
 			writer.write(willNo + "\n");
-			writer.write(new String(encryptedSecretKey));
+			writer.write(new String(encryptedSecretKey, "UTF-8"));
 			writer.close();
 		} catch (IOException ex) {
 			System.out.println("WillManagerService:generateSystemToken:: IOException: " + ex.getMessage());
@@ -288,6 +289,7 @@ public class WillManagerService {
 			FileReader reader = new FileReader("SystemToken/token_" + user.getUserEmail());
 			BufferedReader buffReader = new BufferedReader(reader);
 			String encryptedTokenHash = buffReader.readLine();
+			String tokenHash = buffReader.readLine();
 			String tokenDate = buffReader.readLine();
 			String userEmail = buffReader.readLine();
 			String requestorEmail = buffReader.readLine();
@@ -296,9 +298,9 @@ public class WillManagerService {
 			buffReader.close();
 			if(!userEmail.isEmpty() && !requestorEmail.isEmpty() && !willNo.isEmpty()) {
 				String calculateTokenHash = applySha256ToEncryptedWill(userEmail+requestorEmail+willNo);
-				byte[] calcEncryptedTokenHash = encryptUploadedDataWithSystemSecretKey(calculateTokenHash);
-				String hash = new String(calcEncryptedTokenHash, "UTF-8");
-				if(encryptedTokenHash.equals(hash)) {
+				/*byte[] calcEncryptedTokenHash = encryptUploadedDataWithSystemSecretKey(calculateTokenHash);
+				String hash = new String(calcEncryptedTokenHash, "UTF-8");*/
+				if(calculateTokenHash.equals(tokenHash)) {
 					isValid = "success:"+willNo+":"+userEmail;
 				}
 			}

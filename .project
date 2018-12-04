@@ -3,6 +3,8 @@
 	<name>digital_will_vault</name>
 	<comment></comment>
 	<projects>
+		<project>merkle-tree</project>
+		<project>digital_will_key_manager</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
