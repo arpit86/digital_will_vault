@@ -57,6 +57,14 @@ public class PeerConnectionService {
 				io.printStackTrace();
 			}
 		}
+		if (isMiner) {
+			try {
+				checkAndBroadcast();
+			} catch (IOException | InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+		}
 	}
 	
 	public void sendAllTxtoPeer(Integer peerIndex) {
@@ -163,6 +171,31 @@ public class PeerConnectionService {
 			StartListenThread();
 					} catch (IOException io) {
 			System.out.println("PeerConnectionService:run:: IOException: "+ io.getMessage());
+		}
+	}
+	
+	private void checkAndBroadcast() throws IOException, InterruptedException {
+		if (transactionPool.size() == TX_COUNT_TRESHOLD) {
+			BlockStructure block = new BlockStructure(blockChain.nextBlockNumber());
+			for (Transaction t : transactionPool) {
+				block.addTransactionToBlock(t);
+			}
+			setBlockHash(block);
+			blockChain.acceptIncomingBlock(block);
+			UpdateBlockChainFile(block);
+			System.out.println("miner Waiting for 10 seconds before broadcasting block");
+			Thread.sleep(10000);
+			// broadcast the block to all peers.
+			for (PeerInfo p : peerList) {
+				ObjectOutputStream DataObjectWriter;
+				do
+				{
+					DataObjectWriter = p.getObjectOutputStream();
+				} while(DataObjectWriter==null);										
+				DataObjectWriter.writeObject(block);
+			}
+			// delete transactions from pool
+			transactionPool.clear();
 		}
 	}
 
@@ -275,28 +308,7 @@ public class PeerConnectionService {
 								System.out.println("Transaction "+transaction+" recieved by "+ email+ " from "+peerList.get(Integer.parseInt(getName())).getEmail()+ " added to pool.");
 							}
 							if (isMiner) {
-								if (transactionPool.size() == TX_COUNT_TRESHOLD) {
-									BlockStructure block = new BlockStructure(blockChain.nextBlockNumber());
-									for (Transaction t : transactionPool) {
-										block.addTransactionToBlock(t);
-									}
-									setBlockHash(block);
-									blockChain.acceptIncomingBlock(block);
-									UpdateBlockChainFile(block);
-									System.out.println("miner Waiting for 10 seconds before broadcasting block");
-									Thread.sleep(10000);
-									// broadcast the block to all peers.
-									for (PeerInfo p : peerList) {
-										ObjectOutputStream DataObjectWriter;
-										do
-										{
-											DataObjectWriter = p.getObjectOutputStream();
-										} while(DataObjectWriter==null);										
-										DataObjectWriter.writeObject(block);
-									}
-									// delete transactions from pool
-									transactionPool.clear();
-								}
+								checkAndBroadcast();
 							}
 						} else if (DataObject instanceof BlockStructure) {
 							System.out.println("Block recieved by "+ email+ " from "+peerList.get(Integer.parseInt(getName())).getEmail());
