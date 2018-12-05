@@ -19,6 +19,11 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.PDFTextStripperByArea;
+import org.apache.poi.hwpf.HWPFDocument;
+import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.csus.key.service.KeyManager;
@@ -39,6 +44,20 @@ public class WillManagerService {
 		try {
 			byte[] bytes = file.getBytes();
 			
+			String contentType = file.getContentType();
+			if(contentType.contains("application/msword")) {
+				HWPFDocument wdoc = new HWPFDocument(file.getInputStream());
+				WordExtractor extractor = new WordExtractor(wdoc);
+				bytes = extractor.getText().getBytes();
+			} else if(contentType.contains("application/pdf")) {
+				PDDocument pdoc = PDDocument.load(bytes);
+                PDFTextStripperByArea strip = new PDFTextStripperByArea();
+                strip.setSortByPosition(true);
+                PDFTextStripper textStrip = new PDFTextStripper();
+                String pdfFileInText = textStrip.getText(pdoc);
+                bytes = pdfFileInText.getBytes();
+			}
+			
 			// Encrypting the file data with user's Public key
 			byte[] encryptedData = encryptUploadedWillWithSymKey(bytes, user.getUserEmail());
 			String willHash = applySha256ToEncryptedWill(encryptedData.toString());
@@ -49,7 +68,7 @@ public class WillManagerService {
 			blockService = new BlockManagerService();
 			blockService.createBlockWithWillUploadTransaction(will, peer);
 		} catch(IOException io) {
-			System.out.println("WillManagerService:upload:: Exeption: " + io.getMessage());
+			System.out.println("WillManagerService:upload:: IOException: " + io.getMessage());
 		} catch (SQLException ex) {
 			System.out.println("WillManagerService:upload:: SQLExeption: " + ex.getMessage());
 		}
@@ -58,6 +77,20 @@ public class WillManagerService {
 	public void uploadUpdatedWill(MultipartFile updateWillFile, VaultUser user, PeerConnectionService peer) {
 		try {
 			byte[] bytes = updateWillFile.getBytes();
+			
+			String contentType = updateWillFile.getContentType();
+			if(contentType.contains("application/msword")) {
+				HWPFDocument wdoc = new HWPFDocument(updateWillFile.getInputStream());
+				WordExtractor extractor = new WordExtractor(wdoc);
+				bytes = extractor.getText().getBytes();
+			} else if(contentType.contains("application/pdf")) {
+				PDDocument pdoc = PDDocument.load(bytes);
+                PDFTextStripperByArea strip = new PDFTextStripperByArea();
+                strip.setSortByPosition(true);
+                PDFTextStripper textStrip = new PDFTextStripper();
+                String pdfFileInText = textStrip.getText(pdoc);
+                bytes = pdfFileInText.getBytes();
+			}
 			
 			// Encrypting the file data with user's Public key
 			byte[] encryptedData = encryptUploadedWillWithSymKey(bytes, user.getUserEmail());
@@ -217,7 +250,7 @@ public class WillManagerService {
 		try {
 			KeyManager keyManager = new KeyManager();
 			byte[] encryptedSecretKey = encryptUploadedDataWithSystemPublicKey(new String(keyManager.getSecretKey(userEmail).getEncoded()));
-			FileWriter writer = new FileWriter(new File("SystemToken/token_"+requestorEmail));
+			FileWriter writer = new FileWriter(new File("SystemToken/token_"+requestorEmail+".txt"));
 			writer.write(new String(encryptedTokenHash, "UTF-8") + "\n");
 			writer.write(tokenHash + "\n");
 			writer.write(new Date() + "\n");
@@ -234,7 +267,7 @@ public class WillManagerService {
 	
 		// Send an email to owner to provide the token to the requester
 		emailService = new EmailService();
-		emailService.sendEmailToOwnerWithGeneratedSystemToken(userEmail, "SystemToken/token_"+requestorEmail, requestorEmail);
+		emailService.sendEmailToOwnerWithGeneratedSystemToken(userEmail, "SystemToken/token_"+requestorEmail+".txt", requestorEmail);
 	}
 	
 	private byte[] encryptUploadedDataWithSystemSecretKey(String tokenHash) {
@@ -286,7 +319,7 @@ public class WillManagerService {
 	public String verifySystemToken(MultipartFile file, VaultUser user) {
 		String isValid = "failed";
 		try {
-			FileReader reader = new FileReader("SystemToken/token_" + user.getUserEmail());
+			FileReader reader = new FileReader("SystemToken/token_" + user.getUserEmail()+".txt");
 			BufferedReader buffReader = new BufferedReader(reader);
 			String encryptedTokenHash = buffReader.readLine();
 			String tokenHash = buffReader.readLine();

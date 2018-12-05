@@ -48,14 +48,13 @@ public class HomeController {
 		if(verifyUser.equalsIgnoreCase("new")) {
 			userService.register(user, peer);
 			user = userService.getUserDetailByEmail(user.getUserEmail());
-			request.getSession().setAttribute("user",user);
 		} else if(verifyUser.equalsIgnoreCase("authorizeUser")) {
 			userService.registerAuthorizeUser(user, peer);
 			user = userService.getUserDetailByEmail(user.getUserEmail());
-			request.getSession().setAttribute("user",user);
 		} else {
 			mv = new ModelAndView("login", "user", new VaultUser());
 		}
+		request.getSession().setAttribute("user",user);
 		return mv;
 	}
 	

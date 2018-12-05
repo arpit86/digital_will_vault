@@ -54,7 +54,7 @@ public class EmailService {
 		Session session = getSession();
 
 		// Save the encoded Private key to a file in format <User_email>_priv.txt
-		File file = new File("KeyPair/privateKey_" + email);
+		File file = new File("KeyPair/privateKey_" + email + ".txt");
 		try {
 			// compose the message
 			MimeMessage message = new MimeMessage(session);
@@ -94,7 +94,7 @@ public class EmailService {
 		Session session = getSession();
 
 		// Save the encoded Private key to a file in format <User_email>_priv.txt
-		File file = new File("KeyPair/privateKey_" + userEmail);
+		File file = new File("KeyPair/privateKey_" + userEmail + ".txt");
 
 		// compose the message
 		try {
@@ -157,7 +157,7 @@ public class EmailService {
 		Session session = getSession();
 
 		// Save the encoded Private key to a file in format <User_email>_priv.txt
-		File file = new File("KeyPair/publicKey_" + pubKeyEmail);
+		File file = new File("KeyPair/publicKey_" + pubKeyEmail + ".txt");
 
 		try {
 			// compose the message
@@ -205,7 +205,7 @@ public class EmailService {
 			mBodyPart = new MimeBodyPart();
 			DataSource source = new FileDataSource(file);
 			mBodyPart.setDataHandler(new DataHandler(source));
-			mBodyPart.setFileName("SystemToken_"+ requestorEmail);
+			mBodyPart.setFileName("SystemToken_"+ requestorEmail + ".txt");
 			multipart.addBodyPart(mBodyPart);
 			message.setContent(multipart);
 
