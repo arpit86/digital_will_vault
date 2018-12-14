@@ -13,7 +13,9 @@
 	<font>The will content is as follows:</font>
 	<p>${willContent}</p>
     <br>
-    <br/>				
+    <a href="getPDFdisplay"><input type="button" value="Open As PDF" name="pdfWill"></a>
+    <br>
+    <br> 				
 	<form action="modifyWill" method="post" enctype="multipart/form-data">
         <table border="0">
         	<tr>

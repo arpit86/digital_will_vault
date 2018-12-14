@@ -9,6 +9,7 @@ import net.quux00.MerkleTree;
 // This class stores the Digital Will uploaded by the user
 public class BlockStructure implements java.io.Serializable {
 	
+	private static final long serialVersionUID = -1L;
 	private final int DIFFICULTY = 3;
 	private int nonceTemp;
 	

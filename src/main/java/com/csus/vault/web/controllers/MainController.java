@@ -1,5 +1,8 @@
 package com.csus.vault.web.controllers;
 
+import java.awt.Desktop;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -17,8 +20,16 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.csus.vault.web.model.VaultUser;
 import com.csus.vault.web.model.VaultWillDetail;
+import com.csus.vault.web.service.PDFWatermarkService;
 import com.csus.vault.web.service.PeerConnectionService;
 import com.csus.vault.web.service.WillManagerService;
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfWriter;
 
 @Controller("mainController")
 public class MainController {
@@ -38,6 +49,7 @@ public class MainController {
 		if(user.getUserId() == will.getVault_userId()) {
 			byte[] decryptedData = willService.decryptWillDataWithSymKey(will.getWillContent(), user.getUserEmail());
 			String fileContent = new String(decryptedData, "UTF-8");
+			session.setAttribute("willBytes", fileContent);
 			return new ModelAndView("modifyWill", "willContent", fileContent);
 		} else {
 			return new ModelAndView("notAuthorized");
@@ -83,12 +95,54 @@ public class MainController {
 		return mv;
 	}
 	
-	/*@RequestMapping(value = "/requestPublicKey", method = RequestMethod.GET)
-	public ModelAndView viewRequestPublicKey(HttpSession session, HttpServletResponse response) throws IOException {
-		return new ModelAndView("requestPublicKey");
+	@RequestMapping(value = "/getPDFdisplay", method = RequestMethod.GET)
+	public void viewPDFForOwner(HttpSession session, HttpServletResponse response)
+			throws IOException, DocumentException {
+		String fileName = "SystemToken/tempWill.pdf";
+		String willContent = (String) session.getAttribute("willBytes");
+		File file = new File(fileName);
+		if(file.exists()) {
+			file.delete();
+		}
+		Document document = new Document();
+		PdfWriter.getInstance(document, new FileOutputStream(fileName));
+		document.open();
+		Font font = FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.BLACK);		
+		Paragraph para = new Paragraph(willContent, font);
+		 
+		document.add(para);
+		document.close();
+		
+		Desktop desktop = Desktop.getDesktop();
+        if(file.exists()) {
+        	desktop.open(file);
+        }
 	}
 	
-	@RequestMapping(value = "/requestPubKey", method = RequestMethod.POST)
+	@RequestMapping(value = "/getPDFView", method = RequestMethod.GET)
+	public void viewPDFForAuthorizedUser(HttpSession session, HttpServletResponse response) throws DocumentException, IOException {
+		String fileName = "SystemToken/tempWillVoid.pdf";
+		String willData = (String) session.getAttribute("willData");
+		File file = new File(fileName);
+		if(file.exists()) {
+			file.delete();
+		}
+		Document document = new Document();
+		PdfWriter pdfWriter = PdfWriter.getInstance(document, new FileOutputStream(fileName));
+		pdfWriter.setPageEvent(new PDFWatermarkService());
+		document.open();
+		Font font = FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.BLACK);		
+		Paragraph para = new Paragraph(willData, font);
+		document.add(para);
+		document.close();
+		
+		Desktop desktop = Desktop.getDesktop();
+        if(file.exists()) {
+        	desktop.open(file);
+        }
+	}
+	
+	/*@RequestMapping(value = "/requestPubKey", method = RequestMethod.POST)
 	public ModelAndView requestPublicKey(HttpSession session, HttpServletResponse response,
 	  @RequestParam("email") String email) {
 		ModelAndView mv = new ModelAndView("mainPage");
@@ -146,6 +200,7 @@ public class MainController {
 			String[] resultData = isValid.split(":");
 			String willData = willService.getWillDetailbyWillId(resultData[1], resultData[2], user, peer);
 			mv = new ModelAndView("renderWill", "willData", willData);
+			session.setAttribute("willData", willData);
 		} else {
 			mv = new ModelAndView("error", "error", "Error while reading the file");
 		}

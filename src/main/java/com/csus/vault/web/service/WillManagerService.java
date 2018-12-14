@@ -316,6 +316,7 @@ public class WillManagerService {
 		return encryptData;
 	}
 
+	@SuppressWarnings("unused")
 	public String verifySystemToken(MultipartFile file, VaultUser user) {
 		String isValid = "failed";
 		try {
@@ -331,8 +332,6 @@ public class WillManagerService {
 			buffReader.close();
 			if(!userEmail.isEmpty() && !requestorEmail.isEmpty() && !willNo.isEmpty()) {
 				String calculateTokenHash = applySha256ToEncryptedWill(userEmail+requestorEmail+willNo);
-				/*byte[] calcEncryptedTokenHash = encryptUploadedDataWithSystemSecretKey(calculateTokenHash);
-				String hash = new String(calcEncryptedTokenHash, "UTF-8");*/
 				if(calculateTokenHash.equals(tokenHash)) {
 					isValid = "success:"+willNo+":"+userEmail;
 				}

@@ -5,9 +5,7 @@ import java.util.Date;
 
 public class Transaction implements java.io.Serializable {
 	
-	/**
-	 * 
-	 */
+	private static final long serialVersionUID = -1L;
 	private String transactionType;
 	private long vault_userId;
 	private byte[] publicKeyOrWillHash;

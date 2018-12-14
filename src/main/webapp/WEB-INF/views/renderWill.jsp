@@ -14,6 +14,10 @@
 	<br>
 	<p>${willData}</p>
     <br>
+    <br>
+    <br>
+    <a href="getPDFView"><input type="button" value="Open In PDF" name="pdfViewWill"></a>
+    <br>
     <br>				
 	<a href="mainPage"><input type="button" value="Home" name="home"></a>
 </body>
